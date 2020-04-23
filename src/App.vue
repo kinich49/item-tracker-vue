@@ -1,18 +1,13 @@
 <template>
   <div id="app">
-    <ShoppingList/>
+    <router-view></router-view>
   </div>
 </template>
 
 <script lang="ts">
 
-import ShoppingList from "./components/ShoppingList.vue"
-
 export default {
-  name: "app",
-  components: {
-    ShoppingList
-  }
+  name: "app"
 };
 </script>
 
