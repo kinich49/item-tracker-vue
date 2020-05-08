@@ -23,7 +23,7 @@ const router = new VueRouter({
 
 Vue.config.productionTip = false
 
-new Vue({
+let vm = new Vue({
   render: h => h(App),
   router
 }).$mount('#app')
