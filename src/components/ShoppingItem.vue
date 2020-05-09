@@ -2,31 +2,36 @@
   <div>
     <form>
       <label>Item name</label>
-      <input type="text" v-model="itemName" @keyup="$emit('update:itemName', itemName)"/>
+      <input v-model="name" type="text" @keyup="$emit('update:name', name)" />
       <br />
       <label>Quantity</label>
-      <input v-model="quantity" @keyup="$emit('update:quantity', quantity)"/>
+      <input v-model="quantity" @keyup="$emit('update:quantity', quantity)" />
       <br />
       <label>Unit Price</label>
-      <input v-model="unitPrice" type="text" @keyup="$emit('update:unitPrice', unitPrice)"/>
+      <input v-model="unitPrice" type="text" @keyup="$emit('update:unitPrice', unitPrice)" />
       <br />
       <label>Total Price</label>
-      <input :value="quantity * unitPrice" readonly disabled />
+      <input readonly disabled :value="totalPrice" />
     </form>
-    <br/>
+    <br />
   </div>
 </template>
 
 <script>
 export default {
   name: "ShoppingItem",
-  data() {
+  props: ["id"],
+  data: () => {
     return {
+      name: null,
       quantity: null,
-      unitPrice: null,
-      itemName: null,
-    };
+      unitPrice: null
+    }
   },
-  props: ["id"]
+  computed: {
+    totalPrice() {
+      return this.quantity * this.unitPrice;
+    }
+  }
 };
 </script>

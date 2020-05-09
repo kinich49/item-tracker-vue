@@ -10,12 +10,12 @@ export default {
   name: "app",
   data() {
     return {
-      s : [] as any
+      persistance : [] as any
     }
   }, 
   methods: {
     addShoppingList(shoppingList:any) {
-     this.s.push(shoppingList)
+     this.persistance.push(shoppingList)
     }
   }
 };
