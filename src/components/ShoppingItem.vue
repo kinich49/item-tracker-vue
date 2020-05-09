@@ -5,10 +5,10 @@
       <input v-model="name" type="text" @keyup="$emit('update:name', name)" />
       <br />
       <label>Quantity</label>
-      <input v-model="quantity" @keyup="$emit('update:quantity', quantity)" />
+      <input v-model="quantity" type="number" step="any" @keyup="$emit('update:quantity', quantity)" />
       <br />
       <label>Unit Price</label>
-      <input v-model="unitPrice" type="text" @keyup="$emit('update:unitPrice', unitPrice)" />
+      <input v-model="unitPrice" type="number" step="any" @keyup="$emit('update:unitPrice', unitPrice)" />
       <br />
       <label>Total Price</label>
       <input readonly disabled :value="totalPrice" />

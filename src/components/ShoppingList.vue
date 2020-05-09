@@ -68,6 +68,7 @@ export default {
         shoppingItems: this.shoppingItems
       };
       this.$emit("add-shopping-list", shoppingList);
+      this.$router.push("/");
     },
     validateShoppingItem(item) {
       return (
