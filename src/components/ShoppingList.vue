@@ -16,13 +16,13 @@
           <label>Store</label>
         </template>
       </vue-autosuggest>
-      <br />
     </form>
     <br />
     <ShoppingItem
       v-for="item in shoppingItems"
       v-bind:key="item.id"
       v-bind:id="item.id"
+      v-bind:itemId.sync="item.itemId"
       v-bind:name.sync="item.name"
       v-bind:quantity.sync="item.quantity"
       v-bind:unitPrice.sync="item.unitPrice"
@@ -39,15 +39,16 @@ import ShoppingItem from "./ShoppingItem.vue";
 import { VueAutosuggest } from "vue-autosuggest";
 import axios from "axios";
 import { baseUrl } from "../constants";
+import { mixin } from "../mixins/common";
 
 export default {
   name: "ShoppingList",
+  mixins: [mixin],
   data() {
     return {
       shoppingDate: null,
       store: null,
       shoppingItems: [],
-      valid: true,
       filteredStoreOptions: [],
       storeProps: {
         id: "autosuggest__store_input",
@@ -58,9 +59,8 @@ export default {
   },
   computed: {
     isReadyToSumbit() {
-      if (this.isEmpty(this.shoppingDate)) return false;
-
-      if (this.isEmpty(this.store)) return false;
+      if (!this.store) return false;
+      if (!this.shoppingDate) return false;
 
       let isValid = false;
       for (let item of this.shoppingItems) {
@@ -94,35 +94,30 @@ export default {
       let id = this.shoppingItems.length + 1;
       let shoppingItem = {
         id: id,
+        itemId: null,
         quantity: null,
         unitPrice: null,
+        unit: null,
         name: null,
         brand: null,
-        category: null
+        category: null,
+        currency: "MXN"
       };
       this.shoppingItems.push(shoppingItem);
     },
     submitShoppingList() {
-      // const shoppingList = {
-      //   shoppingDate: this.shoppingDate,
-      //   store: this.store,
-      //   shoppingItems: this.shoppingItems
-      // };
+      const shoppingList = {
+        shoppingDate: this.shoppingDate,
+        store: this.store,
+        shoppingItems: this.shoppingItems
+      };
+      let url = `${baseUrl}/shoppingLists`;
+      axios
+        .post(url, shoppingList)
+        .then(response => console.log(response))
+        .catch(error => console.log(error));
       // this.$emit("add-shopping-list", shoppingList);
       // this.$router.push("/");
-    },
-    validateShoppingItem(item) {
-      return (
-        item &&
-        !this.isEmpty(item.name) &&
-        !this.isEmpty(item.brand) &&
-        !this.isEmpty(item.category) &&
-        !this.isEmpty(item.quantity) &&
-        !this.isEmpty(item.unitPrice)
-      );
-    },
-    isEmpty(value) {
-      return !value || 0 === value.length;
     },
     renderSuggestion(suggestion) {
       return suggestion.item.name;

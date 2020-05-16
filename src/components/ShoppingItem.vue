@@ -30,7 +30,6 @@
           <label>Brand</label>
         </template>
       </vue-autosuggest>
-      <br />
       <vue-autosuggest
         v-model="categoryQuery"
         :suggestions="filteredCategoryOptions"
@@ -44,10 +43,9 @@
           <label>Category</label>
         </template>
       </vue-autosuggest>
-      <br />
       <label>Quantity</label>
       <input
-        v-model="quantity"
+        v-model.number="quantity"
         type="number"
         step="any"
         @keyup="$emit('update:quantity', quantity)"
@@ -55,7 +53,7 @@
       <br />
       <label>Unit Price</label>
       <input
-        v-model="unitPrice"
+        v-model.number="unitPrice"
         type="number"
         step="any"
         @keyup="$emit('update:unitPrice', unitPrice)"
@@ -78,6 +76,7 @@ export default {
   props: ["id"],
   data: () => {
     return {
+      itemId: null,
       name: null,
       brand: null,
       brandQuery: "",
@@ -157,7 +156,9 @@ export default {
       if (option == null || option.item == null) return;
       let selectedItem = option.item;
       this.name = selectedItem.name;
+      this.itemId = selectedItem.id;
       this.$emit("update:name", this.name);
+      this.$emit("update:itemId", this.itemId);
 
       if (selectedItem.category != null) {
         this.categoryQuery = selectedItem.category.name;
@@ -196,74 +197,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-#brand_input {
-  outline: none;
-  position: relative;
-  display: block;
-  font-family: monospace;
-  font-size: 20px;
-  border: 1px solid #616161;
-  padding: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-}
-
-#brand_input.autosuggest__input-open {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.autosuggest__results-container {
-  position: relative;
-  width: 100%;
-}
-
-.autosuggest__results {
-  font-weight: 300;
-  margin: 0;
-  position: absolute;
-  z-index: 10000001;
-  width: 100%;
-  border: 1px solid #e0e0e0;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  background: white;
-  padding: 0px;
-  overflow: scroll;
-  max-height: 200px;
-}
-
-.autosuggest__results ul {
-  list-style: none;
-  padding-left: 0;
-  margin: 0;
-}
-
-.autosuggest__results .autosuggest__results_item {
-  cursor: pointer;
-  padding: 15px;
-}
-
-#autosuggest ul:nth-child(1) > .autosuggest__results_title {
-  border-top: none;
-}
-
-.autosuggest__results .autosuggest__results_title {
-  color: gray;
-  font-size: 11px;
-  margin-left: 0;
-  padding: 15px 13px 5px;
-  border-top: 1px solid lightgray;
-}
-
-.autosuggest__results .autosuggest__results_item:active,
-.autosuggest__results .autosuggest__results_item:hover,
-.autosuggest__results .autosuggest__results_item:focus,
-.autosuggest__results.autosuggest__results_item.autosuggest__results_item-highlighted {
-  background-color: #ddd;
-}
-</style>
