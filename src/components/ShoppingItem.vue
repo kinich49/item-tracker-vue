@@ -2,6 +2,7 @@
   <div>
     <form>
       <vue-autosuggest
+        v-model="item.name"
         :suggestions="filteredItemOptions"
         :limit="10"
         :input-props="itemProps"
@@ -18,7 +19,7 @@
         </template>
       </vue-autosuggest>
       <vue-autosuggest
-        v-model="brandQuery"
+        v-model="item.brand.name"
         :suggestions="filteredBrandOptions"
         :limit="10"
         :input-props="brandProps"
@@ -31,7 +32,7 @@
         </template>
       </vue-autosuggest>
       <vue-autosuggest
-        v-model="categoryQuery"
+        v-model="item.category.name"
         :suggestions="filteredCategoryOptions"
         :limit="10"
         :input-props="categoryProps"
@@ -45,18 +46,18 @@
       </vue-autosuggest>
       <label>Quantity</label>
       <input
-        v-model.number="quantity"
+        v-model.number="item.quantity"
         type="number"
         step="any"
-        @keyup="$emit('update:quantity', quantity)"
+        @keyup="$emit('update:item', item)"
       />
       <br />
       <label>Unit Price</label>
       <input
-        v-model.number="unitPrice"
+        v-model.number="item.unitPrice"
         type="number"
         step="any"
-        @keyup="$emit('update:unitPrice', unitPrice)"
+        @keyup="$emit('update:item', item)"
       />
       <br />
       <label>Total Price</label>
@@ -73,17 +74,24 @@ import { baseUrl } from "../constants";
 
 export default {
   name: "ShoppingItem",
-  props: ["id"],
   data: () => {
     return {
-      itemId: null,
-      name: null,
-      brand: null,
-      brandQuery: "",
-      category: null,
-      categoryQuery: "",
-      quantity: null,
-      unitPrice: null,
+      item: {
+        id: null,
+        name: null,
+        category: {
+          id: null,
+          name: null
+        },
+        brand: {
+          id: null,
+          name: null
+        },
+        quantity: null,
+        unitPrice: null,
+        unit: null,
+        currency: "MXN"
+      },
       filteredBrandOptions: [],
       brandProps: {
         id: "brand_input",
@@ -104,20 +112,45 @@ export default {
   },
   computed: {
     totalPrice() {
-      return this.quantity * this.unitPrice;
+      if (!this.item || !this.item.unitPrice || !this.item.quantity) {
+        return null;
+      }
+
+      return this.item.unitPrice * this.item.quantity;
     }
   },
   methods: {
-    onBrandSelected(option) {
-      if (option == null) return;
-      this.brand = option.item;
-      console.log(option);
-      this.$emit("update:brand", this.brand);
+    onItemInputChanged(text) {
+      if (text === "" || text === undefined) {
+        return;
+      }
+      this.item.id = null;
+      let url = `${baseUrl}/items?name=${text}`;
+      axios
+        .get(url)
+        .then(result => {
+          this.filteredItemOptions = [
+            {
+              data: result.data
+            }
+          ];
+        })
+        .catch(error => console.log(error));
+    },
+    onItemSelected(option) {
+      if (option == null || option.item == null) return;
+      const selectedItem = option.item;
+      this.item.name = selectedItem.name;
+      this.item.id = selectedItem.id;
+      this.item.brand = selectedItem.brand;
+      this.item.category = selectedItem.category;
+      this.$emit("update:item", this.item);
     },
     onBrandInputChanged(text) {
       if (text === "" || text === undefined) {
         return;
       }
+      this.item.brand.id = null;
       let url = `${baseUrl}/brands?name=${text}`;
       axios
         .get(url)
@@ -130,16 +163,16 @@ export default {
         })
         .catch(error => console.log(error));
     },
-    onCategorySelected(option) {
+    onBrandSelected(option) {
       if (option == null) return;
-      this.category = option.item;
-      console.log(option);
-      this.$emit("update:category", this.category);
+      this.item.brand = option.item;
+      this.$emit("update:item", this.item);
     },
     onCategoryInputChanged(text) {
       if (text === "" || text === undefined) {
         return;
       }
+      this.item.category.id = null;
       let url = `${baseUrl}/categories?name=${text}`;
       axios
         .get(url)
@@ -152,41 +185,10 @@ export default {
         })
         .catch(error => console.log(error));
     },
-    onItemSelected(option) {
-      if (option == null || option.item == null) return;
-      let selectedItem = option.item;
-      this.name = selectedItem.name;
-      this.itemId = selectedItem.id;
-      this.$emit("update:name", this.name);
-      this.$emit("update:itemId", this.itemId);
-
-      if (selectedItem.category != null) {
-        this.categoryQuery = selectedItem.category.name;
-        this.category = selectedItem.category;
-        this.$emit("update:category", selectedItem.category);
-      }
-
-      if (selectedItem.brand != null) {
-        this.brandQuery = selectedItem.brand.name;
-        this.brand = selectedItem.brand;
-        this.$emit("update:brand", selectedItem.brand);
-      }
-    },
-    onItemInputChanged(text) {
-      if (text === "" || text === undefined) {
-        return;
-      }
-      let url = `${baseUrl}/items?name=${text}`;
-      axios
-        .get(url)
-        .then(result => {
-          this.filteredItemOptions = [
-            {
-              data: result.data
-            }
-          ];
-        })
-        .catch(error => console.log(error));
+    onCategorySelected(option) {
+      if (option == null) return;
+      this.item.category = option.item;
+      this.$emit("update:item", this.item);
     },
     renderSuggestion(suggestion) {
       return suggestion.item.name;

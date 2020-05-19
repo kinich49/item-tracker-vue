@@ -5,6 +5,7 @@
       <input v-model="shoppingDate" type="date" />
       <br />
       <vue-autosuggest
+        v-model="store.name"
         :suggestions="filteredStoreOptions"
         :limit="10"
         :input-props="storeProps"
@@ -19,15 +20,9 @@
     </form>
     <br />
     <ShoppingItem
-      v-for="item in shoppingItems"
-      v-bind:key="item.id"
-      v-bind:id="item.id"
-      v-bind:itemId.sync="item.itemId"
-      v-bind:name.sync="item.name"
-      v-bind:quantity.sync="item.quantity"
-      v-bind:unitPrice.sync="item.unitPrice"
-      v-bind:brand.sync="item.brand"
-      v-bind:category.sync="item.category"
+      v-for="shoppingItem in shoppingItems"
+      v-bind:key="shoppingItem.index"
+      v-bind:item.sync="shoppingItem.item"
     />
     <button v-on:click="addBlankShoppingItem()">Add Item</button>
     <button v-on:click="submitShoppingList()" :disabled="!isReadyToSumbit">Submit List</button>
@@ -47,7 +42,10 @@ export default {
   data() {
     return {
       shoppingDate: null,
-      store: null,
+      store: {
+        id: null,
+        name: null
+      },
       shoppingItems: [],
       filteredStoreOptions: [],
       storeProps: {
@@ -64,7 +62,7 @@ export default {
 
       let isValid = false;
       for (let item of this.shoppingItems) {
-        isValid = this.validateShoppingItem(item);
+        isValid = this.validateShoppingItem(item.item);
         if (!isValid) break;
       }
       return isValid;
@@ -78,6 +76,7 @@ export default {
       if (text === "" || text === undefined) {
         return;
       }
+      this.store.id = null;
       let url = `${baseUrl}/stores?name=${text}`;
       axios
         .get(url)
@@ -91,27 +90,38 @@ export default {
         .catch(error => console.log(error));
     },
     addBlankShoppingItem() {
-      let id = this.shoppingItems.length + 1;
+      let index = this.shoppingItems.length + 1;
       let shoppingItem = {
-        id: id,
-        itemId: null,
-        quantity: null,
-        unitPrice: null,
-        unit: null,
-        name: null,
-        brand: null,
-        category: null,
-        currency: "MXN"
+        index: index,
+        item: null
       };
       this.shoppingItems.push(shoppingItem);
     },
     submitShoppingList() {
+      let elements = [];
+      console.log(this.shoppingItems);
+      if (this.shoppingItems && this.shoppingItems.length > 0) {
+        elements = this.shoppingItems
+          .map(i => i.item)
+          .map(i => {
+            return {
+              itemId: i.id,
+              name: i.name,
+              category: i.category,
+              brand: i.brand,
+              quantity: i.quantity,
+              unitPrice: i.unitPrice,
+              unit: i.unit,
+              currency: i.currency
+            };
+          });
+      }
       const shoppingList = {
         shoppingDate: this.shoppingDate,
         store: this.store,
-        shoppingItems: this.shoppingItems
+        shoppingItems: elements
       };
-      let url = `${baseUrl}/shoppingLists`;
+      const url = `${baseUrl}/shoppingLists`;
       axios
         .post(url, shoppingList)
         .then(response => console.log(response))
