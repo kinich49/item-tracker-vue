@@ -142,8 +142,24 @@ export default {
       const selectedItem = option.item;
       this.item.name = selectedItem.name;
       this.item.id = selectedItem.id;
-      this.item.brand = selectedItem.brand;
-      this.item.category = selectedItem.category;
+      if (selectedItem.brand == null) {
+        this.item.brand = {
+          id: null,
+          name: null
+        };
+      } else {
+        this.item.brand = selectedItem.brand;
+      }
+
+      if (selectedItem.category == null) {
+        this.item.category = {
+          id: null,
+          name: null
+        };
+      } else {
+        this.item.category = selectedItem.category;
+      }
+
       this.$emit("update:item", this.item);
     },
     onBrandInputChanged(text) {

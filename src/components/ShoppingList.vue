@@ -124,10 +124,12 @@ export default {
       const url = `${baseUrl}/shoppingLists`;
       axios
         .post(url, shoppingList)
-        .then(response => console.log(response))
+        .then(response => {
+          console.log(response);
+          this.$emit("add-shopping-list", shoppingList);
+          this.$router.push("/");
+        })
         .catch(error => console.log(error));
-      // this.$emit("add-shopping-list", shoppingList);
-      // this.$router.push("/");
     },
     renderSuggestion(suggestion) {
       return suggestion.item.name;

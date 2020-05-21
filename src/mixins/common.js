@@ -4,7 +4,6 @@ let mixin = {
             return (
                 item &&
                 this.isItemElementNameValid(item) &&
-                this.isItemElementNameValid(item.brand) &&
                 this.isItemElementNameValid(item.category) &&
                 this.isItemNumberValid(item.quantity) &&
                 this.isItemNumberValid(item.unitPrice)
