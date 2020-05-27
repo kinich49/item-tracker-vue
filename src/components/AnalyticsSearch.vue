@@ -31,25 +31,25 @@ export default {
   name: "AnalyticsSearch",
   data() {
     return {
-      item: null,
       analytics: [],
       filteredItemOptions: [],
       itemProps: {
         id: "autosuggest__store_input",
         placeholder: "Search for item..."
-      }
+      },
+      currentIndex: 0
     };
   },
   methods: {
     onItemInputChanged(text) {
-      let url = `${baseUrl}/items?name=${text}`;
+      if (text === null || text === "") return;
+      let url = `${baseUrl}/suggestions?name=${text}`;
       axios
         .get(url)
         .then(response => {
-          console.log(response);
           this.filteredItemOptions = [
             {
-              data: response.data
+              data: this.mapResponseDataToFilteredData(response.data)
             }
           ];
         })
@@ -57,29 +57,83 @@ export default {
     },
 
     onItemSelected(option) {
-      this.item = option.item;
-      let url = `${baseUrl}/items/${this.item.id}/analytics`;
+      let url = this.getAnalyticsUrl(option.item);
       axios
         .get(url)
         .then(response => {
-          let nextIndex = this.analytics.length + 1;
-          let newAnalytics = {
-            index: nextIndex,
-            item: this.item,
-            analytics: {
-              latestStoreAndDate: `${response.data.latestStore} on ${response.data.latestDate}`,
-              latestPrice: response.data.latestPrice,
-              averagePrice: response.data.averagePrice
-            }
-          };
-          console.log(newAnalytics);
-          this.analytics.push(newAnalytics);
+          let data = response.data;
+          data.forEach(element => {
+            let nextIndex = this.currentIndex++;
+            let newAnalytics = {
+              index: nextIndex,
+              item: element.item,
+              analytics: {
+                latestStoreAndDate: `${element.latestStore} on ${element.latestDate}`,
+                latestPrice: element.latestPrice,
+                averagePrice: element.averagePrice
+              }
+            };
+            this.analytics.push(newAnalytics);
+          });
         })
         .catch(() => {});
     },
 
+    getAnalyticsUrl(item) {
+      let type = item.type.toLowerCase();
+      let id = item.id;
+      let url;
+      if (type === "item") {
+        url = `${baseUrl}/items/${id}/analytics`;
+      } else {
+        url = `${baseUrl}/items/${type}/${id}/analytics`;
+      }
+
+      return url;
+    },
+
     renderSuggestion(suggestion) {
-      return suggestion.item.name;
+      let item = suggestion.item;
+      return `${item.type} ${item.name}`;
+    },
+
+    mapResponseDataToFilteredData(data) {
+      if (data === null || data === "" || data.length == 0) return null;
+
+      let filtered = [];
+      if (data.categories !== null) {
+        data.categories.forEach(category => {
+          let filteredCategory = {
+            type: "Category",
+            id: category.id,
+            name: category.name
+          };
+          filtered.push(filteredCategory);
+        });
+      }
+
+      if (data.brands !== null) {
+        data.brands.forEach(brand => {
+          let filteredBrand = {
+            type: "Brand",
+            id: brand.id,
+            name: brand.name
+          };
+          filtered.push(filteredBrand);
+        });
+      }
+
+      if (data.items !== null) {
+        data.items.forEach(item => {
+          let filteredItem = {
+            type: "Item",
+            id: item.id,
+            name: item.name
+          };
+          filtered.push(filteredItem);
+        });
+      }
+      return filtered;
     }
   },
 
