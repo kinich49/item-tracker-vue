@@ -51,6 +51,7 @@
         step="any"
         @keyup="$emit('update:item', item)"
       />
+      <v-select v-model="item.unit" :options="['KG', 'Unit']"></v-select>
       <br />
       <label>Unit Price</label>
       <input
@@ -69,8 +70,10 @@
 
 <script>
 import { VueAutosuggest } from "vue-autosuggest";
+import vSelect from "vue-select";
 import axios from "axios";
 import { baseUrl } from "../constants";
+import "vue-select/dist/vue-select.css";
 
 export default {
   name: "ShoppingItem",
@@ -89,7 +92,7 @@ export default {
         },
         quantity: null,
         unitPrice: null,
-        unit: null,
+        unit: "",
         currency: "MXN"
       },
       filteredBrandOptions: [],
@@ -142,6 +145,7 @@ export default {
       const selectedItem = option.item;
       this.item.name = selectedItem.name;
       this.item.id = selectedItem.id;
+      
       if (selectedItem.brand == null) {
         this.item.brand = {
           id: null,
@@ -211,7 +215,8 @@ export default {
     }
   },
   components: {
-    VueAutosuggest
+    VueAutosuggest,
+    vSelect
   }
 };
 </script>
