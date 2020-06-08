@@ -4,8 +4,10 @@ import ShoppingList from './components/ShoppingList.vue'
 import Home from './components/Home.vue'
 import AnalyticsSearch from './components/AnalyticsSearch.vue'
 import VueRouter from 'vue-router'
+import VueMeta from 'vue-meta'
 
 Vue.use(VueRouter);
+Vue.use(VueMeta);
 
 const routes = [
   {

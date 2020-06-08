@@ -1,70 +1,66 @@
 <template>
-  <div>
-    <form>
-      <vue-autosuggest
-        v-model="item.name"
-        :suggestions="filteredItemOptions"
-        :limit="10"
-        :input-props="itemProps"
-        :render-suggestion="renderSuggestion"
-        @input="onItemInputChanged"
-        @selected="onItemSelected"
-      >
-        <template slot="before-input">
-          <label>Item Name</label>
-        </template>
+  <div class="item-container">
+    <label class="item-label">Item Name</label>
+    <vue-autosuggest
+      v-model="item.name"
+      :suggestions="filteredItemOptions"
+      :limit="10"
+      :input-props="itemProps"
+      :render-suggestion="renderSuggestion"
+      @input="onItemInputChanged"
+      @selected="onItemSelected"
+      class="item-input"
+    >
+      <template slot="before-suggestions">
+        <p>If you select an item, current Brand and Category will be overriden</p>
+      </template>
+    </vue-autosuggest>
 
-        <template slot="before-suggestions">
-          <p>If you select an item, current Brand and Category will be overriden</p>
-        </template>
-      </vue-autosuggest>
-      <vue-autosuggest
-        v-model="item.brand.name"
-        :suggestions="filteredBrandOptions"
-        :limit="10"
-        :input-props="brandProps"
-        :render-suggestion="renderSuggestion"
-        @input="onBrandInputChanged"
-        @selected="onBrandSelected"
-      >
-        <template slot="before-input">
-          <label>Brand</label>
-        </template>
-      </vue-autosuggest>
-      <vue-autosuggest
-        v-model="item.category.name"
-        :suggestions="filteredCategoryOptions"
-        :limit="10"
-        :input-props="categoryProps"
-        :render-suggestion="renderSuggestion"
-        @input="onCategoryInputChanged"
-        @selected="onCategorySelected"
-      >
-        <template slot="before-input">
-          <label>Category</label>
-        </template>
-      </vue-autosuggest>
-      <label>Quantity</label>
-      <input
-        v-model.number="item.quantity"
-        type="number"
-        step="any"
-        @keyup="$emit('update:item', item)"
-      />
-      <v-select v-model="item.unit" :options="['KG', 'Unit']"></v-select>
-      <br />
-      <label>Unit Price</label>
-      <input
-        v-model.number="item.unitPrice"
-        type="number"
-        step="any"
-        @keyup="$emit('update:item', item)"
-      />
-      <br />
-      <label>Total Price</label>
-      <input readonly disabled :value="totalPrice" />
-    </form>
-    <br />
+    <label class="item-label">Brand</label>
+    <vue-autosuggest
+      v-model="item.brand.name"
+      :suggestions="filteredBrandOptions"
+      :limit="10"
+      :input-props="brandProps"
+      :render-suggestion="renderSuggestion"
+      @input="onBrandInputChanged"
+      @selected="onBrandSelected"
+      class="item-input"
+    />
+
+    <label class="item-label">Category</label>
+    <vue-autosuggest
+      v-model="item.category.name"
+      :suggestions="filteredCategoryOptions"
+      :limit="10"
+      :input-props="categoryProps"
+      :render-suggestion="renderSuggestion"
+      @input="onCategoryInputChanged"
+      @selected="onCategorySelected"
+      class="item-input"
+    />
+
+    <label class="item-label">Quantity</label>
+    <input
+      v-model.number="item.quantity"
+      type="number"
+      step="any"
+      @keyup="$emit('update:item', item)"
+      class="brand-input"
+    />
+    <v-select v-model="item.unit" :options="['KG', 'Unit']" class="brand-unit-input"></v-select>
+
+    <label class="item-label">Unit Price</label>
+    <input
+      v-model.number="item.unitPrice"
+      type="number"
+      step="any"
+      @keyup="$emit('update:item', item)"
+      class="item-input"
+    />
+
+    <label class="item-label">Total Price</label>
+    <input readonly disabled :value="totalPrice" class="total-price-input" />
   </div>
 </template>
 
@@ -145,7 +141,7 @@ export default {
       const selectedItem = option.item;
       this.item.name = selectedItem.name;
       this.item.id = selectedItem.id;
-      
+
       if (selectedItem.brand == null) {
         this.item.brand = {
           id: null,
@@ -220,3 +216,46 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.item-container {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(50px, 1fr));
+}
+
+.item-label {
+  margin-left: 1em;
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+.item-input {
+  grid-column-start: 3;
+  grid-column-end: 5;
+}
+
+.brand-iput {
+  grid-column-start: 3;
+  grid-column-end: 4;
+}
+
+.brand-unit-input {
+  grid-column-start: 4;
+  grid-column-end: 5;
+}
+
+.total-price-input {
+  grid-column-start: 4;
+  grid-column-end: 5;
+}
+
+</style>
