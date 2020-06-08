@@ -10,10 +10,12 @@
   "dependencies": {
     "@types/vuelidate": "^0.7.13",
     "axios": "^0.19.2",
+    "bulma": "^0.8.2",
     "core-js": "^3.6.5",
     "vue": "^2.6.11",
     "vue-autosuggest": "^2.1.2",
     "vue-class-component": "^7.2.2",
+    "vue-meta": "^2.3.4",
     "vue-property-decorator": "^8.4.2",
     "vue-router": "^3.3.2",
     "vue-select": "^3.10.3",
