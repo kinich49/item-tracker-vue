@@ -16,22 +16,27 @@
         @selected="onStoreSelected"
       />
 
-      <div class="list" id="shopping-list">
+      <div id="empty-message-container" v-if="shoppingItems.length <= 0">
+        <p id="empty-message">No items yet. Try adding something!</p>
+      </div>
+
+      <div v-else id="shopping-list">
         <ShoppingItem
-          class="card"
           v-for="shoppingItem in shoppingItems"
           v-bind:key="shoppingItem.index"
           v-bind:item.sync="shoppingItem.item"
         />
       </div>
 
-      <button
+      <v-btn
+        color="secondary"
+        tile
         id="submit-shopping-list"
         v-on:click="submitShoppingList()"
         :disabled="!isReadyToSumbit"
-      >Submit List</button>
+      >Save</v-btn>
     </div>
-    <button id="shopping-add-item" v-on:click="addBlankShoppingItem()">Add Item</button>
+    <v-btn block id="shopping-add-item" color="primary" v-on:click="addBlankShoppingItem()">Add Item</v-btn>
   </div>
 </template>
 
@@ -56,7 +61,7 @@ export default {
       filteredStoreOptions: [],
       storeProps: {
         id: "autosuggest__store_input",
-        placeholder: "Where did you go shopping today...?"
+        placeholder: "Where did you shop?"
       },
       limit: 10
     };
@@ -105,7 +110,6 @@ export default {
     },
     submitShoppingList() {
       let elements = [];
-      console.log(this.shoppingItems);
       if (this.shoppingItems && this.shoppingItems.length > 0) {
         elements = this.shoppingItems
           .map(i => i.item)
@@ -132,7 +136,6 @@ export default {
         .post(url, shoppingList)
         .then(response => {
           console.log(response);
-          this.$emit("add-shopping-list", shoppingList);
           this.$router.push("/");
         })
         .catch(error => console.log(error));
@@ -160,20 +163,22 @@ export default {
     ". shopping-label shopping-label ."
     "store-label store-label store-input store-input"
     "date-label date-label date-input date-input"
-    ". submit-list submit-list ."
+    ". . . submit-list"
     "shopping-list shopping-list shopping-list shopping-list";
-  background-color: rgb(35, 191, 243);
   padding: 0 24px;
 }
 
 #shopping-label {
+  margin-top: 0.5em;
   grid-area: shopping-label;
   justify-self: center;
   text-align: center;
+  line-height: 90%;
 }
 
 #shopping-store-label {
   grid-area: store-label;
+  padding-right: 0.5em;
   justify-self: end;
   text-align: right;
 }
@@ -184,16 +189,13 @@ export default {
 
 #shopping-date-label {
   grid-area: date-label;
+  padding-right: 0.5em;
   justify-self: end;
   text-align: right;
 }
 
 #shopping-date-input {
   grid-area: date-input;
-}
-
-#shopping-list {
-  grid-area: shopping-list;
 }
 
 #submit-shopping-list {
@@ -204,36 +206,30 @@ export default {
 }
 
 #shopping-add-item {
-  background-color: #333;
-  border: none;
-  box-sizing: border-box;
-  color: whitesmoke;
   position: fixed;
   bottom: 0;
-  padding: 14px 28px;
   width: 100%;
   left: 0;
 }
 
-.list {
-  box-sizing: border-box;
-  padding: 10px;
-  margin: 10px;
-  border: none;
-  background-color: mediumslateblue;
+#shopping-list {
+  grid-area: shopping-list;
   display: flex;
   flex-direction: column-reverse;
   gap: 1em;
   margin-bottom: 100px;
+  margin-top: 1em;
 }
 
-.card {
-  -webkit-box-shadow: 10px 10px 16px 0px rgba(0, 0, 0, 0.28);
-  -moz-box-shadow: 10px 10px 16px 0px rgba(0, 0, 0, 0.28);
-  box-shadow: 10px 10px 16px 0px rgba(0, 0, 0, 0.28);
-  background-color: lemonchiffon;
-  box-sizing: border-box;
-  padding: 1em;
-  border-radius: 5px;
+#empty-message-container {
+  grid-area: shopping-list;
+  display: flex;
+  align-items: center;
+  height: 60vh;
+  justify-self: center;
+}
+
+#empty-message {
+  color: dimgray;
 }
 </style>  

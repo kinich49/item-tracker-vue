@@ -5,6 +5,7 @@ import Home from './components/Home.vue'
 import AnalyticsSearch from './components/AnalyticsSearch.vue'
 import VueRouter from 'vue-router'
 import VueMeta from 'vue-meta'
+import vuetify from './plugins/vuetify';
 
 Vue.use(VueRouter);
 Vue.use(VueMeta);
@@ -33,5 +34,6 @@ Vue.config.productionTip = false
 
 let vm = new Vue({
   render: h => h(App),
+  vuetify,
   router
 }).$mount('#app')

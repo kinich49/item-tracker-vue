@@ -1,6 +1,6 @@
 <template>
-  <div class="item-container">
-    <label class="item-label">Item Name</label>
+  <v-card class="main-item-container">
+    <label id="name-label">Item</label>
     <vue-autosuggest
       v-model="item.name"
       :suggestions="filteredItemOptions"
@@ -9,59 +9,69 @@
       :render-suggestion="renderSuggestion"
       @input="onItemInputChanged"
       @selected="onItemSelected"
-      class="item-input"
+      id="name-input"
     >
       <template slot="before-suggestions">
         <p>If you select an item, current Brand and Category will be overriden</p>
       </template>
     </vue-autosuggest>
+    <v-expand-transition>
+      <div class="item-details-container" v-show="expand">
+        <label id="brand-label">Brand</label>
+        <vue-autosuggest
+          v-model="item.brand.name"
+          :suggestions="filteredBrandOptions"
+          :limit="10"
+          :input-props="brandProps"
+          :render-suggestion="renderSuggestion"
+          @input="onBrandInputChanged"
+          @selected="onBrandSelected"
+          id="brand-input"
+        />
 
-    <label class="item-label">Brand</label>
-    <vue-autosuggest
-      v-model="item.brand.name"
-      :suggestions="filteredBrandOptions"
-      :limit="10"
-      :input-props="brandProps"
-      :render-suggestion="renderSuggestion"
-      @input="onBrandInputChanged"
-      @selected="onBrandSelected"
-      class="item-input"
-    />
+        <label id="category-label">Category</label>
+        <vue-autosuggest
+          v-model="item.category.name"
+          :suggestions="filteredCategoryOptions"
+          :limit="10"
+          :input-props="categoryProps"
+          :render-suggestion="renderSuggestion"
+          @input="onCategoryInputChanged"
+          @selected="onCategorySelected"
+          id="category-input"
+        />
 
-    <label class="item-label">Category</label>
-    <vue-autosuggest
-      v-model="item.category.name"
-      :suggestions="filteredCategoryOptions"
-      :limit="10"
-      :input-props="categoryProps"
-      :render-suggestion="renderSuggestion"
-      @input="onCategoryInputChanged"
-      @selected="onCategorySelected"
-      class="item-input"
-    />
+        <label id="quantity-label">Quantity</label>
+        <input
+          v-model.number="item.quantity"
+          type="number"
+          step="any"
+          @keyup="$emit('update:item', item)"
+          id="quantity-input"
+        />
+        <v-select v-model="item.unit" :options="['KG', 'Unit']" id="quantity-unit-input"></v-select>
 
-    <label class="item-label">Quantity</label>
-    <input
-      v-model.number="item.quantity"
-      type="number"
-      step="any"
-      @keyup="$emit('update:item', item)"
-      class="brand-input"
-    />
-    <v-select v-model="item.unit" :options="['KG', 'Unit']" class="brand-unit-input"></v-select>
+        <label id="unit-price-label">Unit Price</label>
+        <input
+          v-model.number="item.unitPrice"
+          type="number"
+          step="any"
+          @keyup="$emit('update:item', item)"
+          id="unit-price-input"
+          placeholder="How much did it cost?"
+        />
+        <v-divider insent id="divider"></v-divider>
+      </div>
+    </v-expand-transition>
 
-    <label class="item-label">Unit Price</label>
-    <input
-      v-model.number="item.unitPrice"
-      type="number"
-      step="any"
-      @keyup="$emit('update:item', item)"
-      class="item-input"
-    />
-
-    <label class="item-label">Total Price</label>
-    <input readonly disabled :value="totalPrice" class="total-price-input" />
-  </div>
+    <label id="total-price-label">Total</label>
+    <input readonly disabled :value="totalPrice" id="total-price-input" />
+    <v-card-actions id="actions">
+      <v-btn icon @click="expand = !expand">
+        <v-icon>{{ expand ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+      </v-btn>
+    </v-card-actions>
+  </v-card>
 </template>
 
 <script>
@@ -104,9 +114,15 @@ export default {
       filteredItemOptions: [],
       itemProps: {
         id: "autosuggest__item_input",
-        placeholder: "Type an item..."
+        placeholder: "What did you buy?."
       },
-      limit: 10
+      limit: 10,
+      expand: false,
+      formatter: new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2
+      })
     };
   },
   computed: {
@@ -114,8 +130,7 @@ export default {
       if (!this.item || !this.item.unitPrice || !this.item.quantity) {
         return null;
       }
-
-      return this.item.unitPrice * this.item.quantity;
+      return this.formatter.format(this.item.unitPrice * this.item.quantity);
     }
   },
   methods: {
@@ -227,35 +242,94 @@ input::-webkit-inner-spin-button {
   -webkit-appearance: none;
 }
 
-.item-container {
+.main-item-container {
+  padding-top: 1em;
   display: grid;
   grid-template-columns: repeat(4, minmax(50px, 1fr));
+  grid-template-areas:
+    "item-name-label item-name-input item-name-input ."
+    "item-details item-details item-details item-details"
+    "total-price-label total-price-input . ."
+    ". . . chevron";
 }
 
-.item-label {
+.item-details-container {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(50px, 1fr));
+  grid-template-areas:
+    "brand-label brand-input brand-input ."
+    "category-label category-input category-input ."
+    "quantity-label quantity-input quantity-unit-input . "
+    "unit-price-label unit-price-input unit-price-input ."
+    ". divider divider divider";
+  grid-area: item-details;
+}
+
+#name-label {
   margin-left: 1em;
-  grid-column-start: 1;
-  grid-column-end: 3;
+  grid-area: item-name-label;
 }
 
-.item-input {
-  grid-column-start: 3;
-  grid-column-end: 5;
+#name-input {
+  grid-area: item-name-input;
 }
 
-.brand-iput {
-  grid-column-start: 3;
-  grid-column-end: 4;
+#brand-label {
+  margin-left: 1em;
+  grid-area: brand-label;
 }
 
-.brand-unit-input {
-  grid-column-start: 4;
-  grid-column-end: 5;
+#brand-iput {
+  grid-area: brand-input;
 }
 
-.total-price-input {
-  grid-column-start: 4;
-  grid-column-end: 5;
+#category-label {
+  margin-left: 1em;
+  grid-area: category-label;
 }
 
+#category-input {
+  grid-area: category-input;
+}
+
+#quantity-label {
+  margin-left: 1em;
+  grid-area: quantity-label;
+}
+
+#quantity-input {
+  grid-area: quantity-input;
+}
+
+#quantity-unit-input {
+  grid-area: quantity-unit-input;
+  margin-right: 1em;
+}
+
+#unit-price-label {
+  margin-left: 1em;
+  grid-area: unit-price-label;
+}
+
+#unit-price-input {
+  grid-area: unit-price-input;
+}
+
+#total-price-label {
+  margin-left: 1em;
+  grid-area: total-price-label;
+}
+
+#total-price-input {
+  grid-area: total-price-input;
+}
+
+#divider {
+  margin-right: 1em;
+  grid-area: divider;
+}
+#actions {
+  grid-area: chevron;
+  justify-self: end;
+}
 </style>
