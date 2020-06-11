@@ -243,26 +243,11 @@ input::-webkit-inner-spin-button {
 }
 
 .main-item-container {
-  padding-top: 1em;
   display: grid;
-  grid-template-columns: repeat(4, minmax(50px, 1fr));
-  grid-template-areas:
-    "item-name-label item-name-input item-name-input ."
-    "item-details item-details item-details item-details"
-    "total-price-label total-price-input . ."
-    ". . . chevron";
 }
 
 .item-details-container {
   display: grid;
-  grid-template-columns: repeat(4, minmax(50px, 1fr));
-  grid-template-areas:
-    "brand-label brand-input brand-input ."
-    "category-label category-input category-input ."
-    "quantity-label quantity-input quantity-unit-input . "
-    "unit-price-label unit-price-input unit-price-input ."
-    ". divider divider divider";
-  grid-area: item-details;
 }
 
 #name-label {
@@ -331,5 +316,58 @@ input::-webkit-inner-spin-button {
 #actions {
   grid-area: chevron;
   justify-self: end;
+}
+
+/* 
+  ##Device = Desktops
+  ##Screen = 1281px to higher resolution desktops
+*/
+@media (min-width: 1281px) {
+  .main-item-container {
+    padding-top: 1em;
+    grid-template-columns: repeat(8, minmax(50px, 1fr));
+    grid-template-areas:
+      "item-name-label item-name-input item-name-input . . . . . "
+      "item-details item-details item-details item-details item-details item-details item-details item-details"
+      "total-price-label total-price-input total-price-input . . . . ."
+      ". . . . . . . chevron";
+  }
+
+  .item-details-container {
+    grid-template-columns: repeat(8, minmax(50px, 1fr));
+    grid-template-areas:
+      "brand-label brand-input brand-input . category-label category-input category-input ."
+      "quantity-label quantity-input quantity-unit-input quantity-unit-input unit-price-label unit-price-input unit-price-input ."
+      ". divider divider divider divider divider divider .";
+    grid-area: item-details;
+  }
+}
+
+/* 
+  ##Device = Most of the Smartphones Mobiles (Portrait)
+  ##Screen = B/w 320px to 479px
+*/
+
+@media (min-width: 320px) and (max-width: 480px) {
+  .main-item-container {
+    padding-top: 1em;
+    grid-template-columns: repeat(4, minmax(50px, 1fr));
+    grid-template-areas:
+      "item-name-label item-name-input item-name-input ."
+      "item-details item-details item-details item-details"
+      "total-price-label total-price-input . ."
+      ". . . chevron";
+  }
+
+  .item-details-container {
+    grid-template-columns: repeat(4, minmax(50px, 1fr));
+    grid-template-areas:
+      "brand-label brand-input brand-input ."
+      "category-label category-input category-input ."
+      "quantity-label quantity-input quantity-unit-input . "
+      "unit-price-label unit-price-input unit-price-input ."
+      ". divider divider divider";
+    grid-area: item-details;
+  }
 }
 </style>

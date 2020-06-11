@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="main">
+    <div id="main">
       <h1 id="shopping-label">Shopping Receipt</h1>
       <label id="shopping-date-label">Shoping Date</label>
       <input id="shopping-date-input" v-model="shoppingDate" type="date" />
@@ -36,7 +36,11 @@
         :disabled="!isReadyToSumbit"
       >Save</v-btn>
     </div>
-    <v-btn block id="shopping-add-item" color="primary" v-on:click="addBlankShoppingItem()">Add Item</v-btn>
+    <div id="fab-container">
+      <v-btn fab id="shopping-add-item" color="primary" v-on:click="addBlankShoppingItem()">
+        <v-icon>mdi-plus</v-icon>
+      </v-btn>
+    </div>
   </div>
 </template>
 
@@ -147,25 +151,23 @@ export default {
   components: {
     ShoppingItem,
     VueAutosuggest
-  },
-  metaInfo: {
-    meta: [{ name: "viewport", content: "width-device-width, initial-scale=1" }]
   }
 };
 </script>
 
 <style scoped>
-.main {
+#main {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr;
-  grid-template-areas:
-    ". shopping-label shopping-label ."
-    "store-label store-label store-input store-input"
-    "date-label date-label date-input date-input"
-    ". . . submit-list"
-    "shopping-list shopping-list shopping-list shopping-list";
   padding: 0 24px;
+}
+
+#fab-container {
+  display: grid;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  box-sizing: border-box;
+  padding: 24px;
 }
 
 #shopping-label {
@@ -206,10 +208,9 @@ export default {
 }
 
 #shopping-add-item {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  left: 0;
+  grid-area: add-item;
+  justify-self: end;
+  align-self: start;
 }
 
 #shopping-list {
@@ -231,5 +232,53 @@ export default {
 
 #empty-message {
   color: dimgray;
+}
+
+/* 
+  ##Device = Desktops
+  ##Screen = 1281px to higher resolution desktops
+*/
+
+@media (min-width: 1281px) {
+  #main {
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr 1fr;
+    grid-template-areas:
+      ". . . shopping-label shopping-label . . ."
+      ". . store-label store-label store-input store-input . ."
+      ". . date-label date-label date-input date-input . . "
+      ". . . .  . submit-list . ."
+      ". . shopping-list shopping-list shopping-list shopping-list . .";
+  }
+
+  #fab-container {
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: 1fr;
+    grid-template-areas: ". . . . . add-item . .";
+  }
+}
+
+/* 
+  ##Device = Most of the Smartphones Mobiles (Portrait)
+  ##Screen = B/w 320px to 479px
+*/
+
+@media (min-width: 320px) and (max-width: 480px) {
+  #main {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr;
+    grid-template-areas:
+      ". shopping-label shopping-label ."
+      "store-label store-label store-input store-input"
+      "date-label date-label date-input date-input"
+      ". . . submit-list"
+      "shopping-list shopping-list shopping-list shopping-list";
+  }
+
+  #fab-container {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 1fr;
+    grid-template-areas: ". . . add-item";
+  }
 }
 </style>  
