@@ -1,19 +1,14 @@
 <template>
   <div id="main">
     <h1 id="title">Analytics</h1>
-    <vue-autosuggest
-      id="search-input"
-      :suggestions="filteredItemOptions"
-      :limit="10"
-      :input-props="itemProps"
-      :render-suggestion="renderSuggestion"
-      @input="onItemInputChanged"
-      @selected="onItemSelected"
-    >
-      <template slot="before-input">
-        <label>Item Name</label>
-      </template>
-    </vue-autosuggest>
+    <v-autocomplete
+      class="search-input"
+      v-model="selection"
+      :items="items"
+      :search-input.sync="search"
+      placeholder="Search for an item, brand or category"
+      return-object
+    ></v-autocomplete>
     <div id="search-results">
       <ShoppingItemAnalytics
         v-for="analytic in analytics"
@@ -27,7 +22,6 @@
 
 <script>
 import ShoppingItemAnalytics from "./ShoppingItemAnalytics";
-import { VueAutosuggest } from "vue-autosuggest";
 import axios from "axios";
 import { baseUrl } from "../constants";
 
@@ -36,32 +30,93 @@ export default {
   data() {
     return {
       analytics: [],
-      filteredItemOptions: [],
-      itemProps: {
-        id: "autosuggest__store_input",
-        placeholder: "Search for item..."
-      },
-      currentIndex: 0
+      entries: [],
+      currentIndex: 0,
+      search: null,
+      selection: null
     };
   },
   methods: {
-    onItemInputChanged(text) {
+    getAnalyticsUrl(item) {
+      let type = item.type.toLowerCase();
+      let id = item.id;
+      let url;
+      if (type === "item") {
+        url = `${baseUrl}/items/${id}/analytics`;
+      } else {
+        url = `${baseUrl}/items/${type}/${id}/analytics`;
+      }
+
+      return url;
+    }
+  },
+
+  computed: {
+    items() {
+      if (this.entries === null || this.entries === "") return null;
+
+      let suggestions = [];
+      let categories = this.entries.categories;
+      if (categories != undefined && categories !== null) {
+        categories.forEach(category => {
+          let suggestion = {
+            text: `Category: ${category.name}`,
+            value: {
+              type: "Category",
+              id: category.id,
+              name: category.name
+            }
+          };
+          suggestions.push(suggestion);
+        });
+      }
+
+      let brands = this.entries.brands;
+      if (brands != undefined && brands !== null) {
+        brands.forEach(brand => {
+          let suggestion = {
+            text: `Brand: ${brand.name}`,
+            value: {
+              type: "Brand",
+              id: brand.id,
+              name: brand.name
+            }
+          };
+          suggestions.push(suggestion);
+        });
+      }
+
+      let items = this.entries.items;
+      if (items != undefined && items !== null) {
+        items.forEach(item => {
+          let suggestion = {
+            text: `Item: ${item.name}`,
+            value: {
+              type: "Item",
+              id: item.id,
+              name: item.name
+            }
+          };
+          suggestions.push(suggestion);
+        });
+      }
+      return suggestions;
+    }
+  },
+  watch: {
+    search(text) {
       if (text === null || text === "") return;
       let url = `${baseUrl}/suggestions?name=${text}`;
       axios
         .get(url)
         .then(response => {
-          this.filteredItemOptions = [
-            {
-              data: this.mapResponseDataToFilteredData(response.data)
-            }
-          ];
+          this.entries = response.data;
         })
         .catch(error => console.log(error));
     },
-
-    onItemSelected(option) {
-      let url = this.getAnalyticsUrl(option.item);
+    selection(selection) {
+      let url = this.getAnalyticsUrl(selection.value);
+      this.analytics = [];
       axios
         .get(url)
         .then(response => {
@@ -81,69 +136,10 @@ export default {
           });
         })
         .catch(() => {});
-    },
-
-    getAnalyticsUrl(item) {
-      let type = item.type.toLowerCase();
-      let id = item.id;
-      let url;
-      if (type === "item") {
-        url = `${baseUrl}/items/${id}/analytics`;
-      } else {
-        url = `${baseUrl}/items/${type}/${id}/analytics`;
-      }
-
-      return url;
-    },
-
-    renderSuggestion(suggestion) {
-      let item = suggestion.item;
-      return `${item.type} ${item.name}`;
-    },
-
-    mapResponseDataToFilteredData(data) {
-      if (data === null || data === "" || data.length == 0) return null;
-
-      let filtered = [];
-      if (data.categories !== null) {
-        data.categories.forEach(category => {
-          let filteredCategory = {
-            type: "Category",
-            id: category.id,
-            name: category.name
-          };
-          filtered.push(filteredCategory);
-        });
-      }
-
-      if (data.brands !== null) {
-        data.brands.forEach(brand => {
-          let filteredBrand = {
-            type: "Brand",
-            id: brand.id,
-            name: brand.name
-          };
-          filtered.push(filteredBrand);
-        });
-      }
-
-      if (data.items !== null) {
-        data.items.forEach(item => {
-          let filteredItem = {
-            type: "Item",
-            id: item.id,
-            name: item.name
-          };
-          filtered.push(filteredItem);
-        });
-      }
-      return filtered;
     }
   },
-
   components: {
-    ShoppingItemAnalytics,
-    VueAutosuggest
+    ShoppingItemAnalytics
   }
 };
 </script>
@@ -159,7 +155,7 @@ export default {
   justify-self: center;
 }
 
-#search-input {
+.search-input {
   grid-area: search;
 }
 
@@ -172,10 +168,14 @@ export default {
   margin-top: 24px;
 }
 
+/* 
+  ##Device = Desktops
+  ##Screen = 1281px to higher resolution desktops
+*/
 @media (min-width: 1281px) {
   #main {
     grid-template-columns: repeat(12, 1fr);
-    grid-template-rows: repeat(3, minmax(1fr, 75px)) 5fr;
+    grid-template-rows: repeat(3, minmax(75px, 1fr)) 5fr;
     grid-template-areas:
       ". . . . . . . . . . . ."
       ". . . . . title title . . . . . "
@@ -191,12 +191,12 @@ export default {
 @media (min-width: 320px) and (max-width: 480px) {
   #main {
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: 1fr 1fr 5fr;
+    grid-template-rows: repeat(3, minmax(75px, 1fr)) 5fr;
     grid-template-areas:
       ". . . ."
       ". title title  ."
       ". search search ."
-      "results results results ";
+      "results results results results";
   }
 }
 </style>
