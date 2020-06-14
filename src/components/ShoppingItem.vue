@@ -1,63 +1,46 @@
 <template>
   <v-card class="main-item-container">
-    <label id="name-label">Item</label>
-    <vue-autosuggest
-      v-model="item.name"
-      :suggestions="filteredItemOptions"
-      :limit="10"
-      :input-props="itemProps"
-      :render-suggestion="renderSuggestion"
-      @input="onItemInputChanged"
-      @selected="onItemSelected"
-      id="name-input"
-    >
-      <template slot="before-suggestions">
-        <p>If you select an item, current Brand and Category will be overriden</p>
-      </template>
-    </vue-autosuggest>
+    <v-combobox
+      v-model="itemSelection"
+      class="name-input"
+      :items="items"
+      :search-input.sync="itemSearch"
+      label="Item"
+      placeholder="What did you buy?"
+      hint="If you select an item, current Brand and Category will be overriden"
+      hide-no-data
+      clearable
+    />
     <v-expand-transition>
       <div class="item-details-container" v-show="expand">
-        <label id="brand-label">Brand</label>
-        <vue-autosuggest
-          v-model="item.brand.name"
-          :suggestions="filteredBrandOptions"
-          :limit="10"
-          :input-props="brandProps"
-          :render-suggestion="renderSuggestion"
-          @input="onBrandInputChanged"
-          @selected="onBrandSelected"
-          id="brand-input"
+        <v-combobox
+          v-model="brandSelection"
+          class="brand-input"
+          :items="brandItems"
+          :search-input.sync="brandSearch"
+          label="Brand"
+          placeholder="Type the item's brand"
+          hide-no-data
+          clearable
         />
 
-        <label id="category-label">Category</label>
-        <vue-autosuggest
-          v-model="item.category.name"
-          :suggestions="filteredCategoryOptions"
-          :limit="10"
-          :input-props="categoryProps"
-          :render-suggestion="renderSuggestion"
-          @input="onCategoryInputChanged"
-          @selected="onCategorySelected"
-          id="category-input"
+        <v-combobox
+          v-model="categorySelection"
+          class="category-input"
+          :items="categoryItems"
+          :search-input.sync="categorySearch"
+          label="Category"
+          placeholder="Type the item's category"
+          hide-no-data
+          clearable
         />
 
-        <label id="quantity-label">Quantity</label>
-        <input
-          v-model.number="item.quantity"
-          type="number"
-          step="any"
-          @keyup="$emit('update:item', item)"
-          id="quantity-input"
-        />
-        <v-select v-model="item.unit" :options="['KG', 'Unit']" id="quantity-unit-input"></v-select>
-
-        <label id="unit-price-label">Unit Price</label>
-        <input
-          v-model.number="item.unitPrice"
-          type="number"
-          step="any"
-          @keyup="$emit('update:item', item)"
-          id="unit-price-input"
+        <v-text-field label="Quantity" v-model.number="quantity" class="quantity-input" />
+        <v-select class="quantity-unit-input" v-model="unit" :items="['KG','Unit']" label="Unit"></v-select>
+        <v-text-field
+          class="unit-price-input"
+          v-model.number="unitPrice"
+          label="Unit Price"
           placeholder="How much did it cost?"
         />
         <v-divider insent id="divider"></v-divider>
@@ -75,49 +58,27 @@
 </template>
 
 <script>
-import { VueAutosuggest } from "vue-autosuggest";
-import vSelect from "vue-select";
 import axios from "axios";
 import { baseUrl } from "../constants";
-import "vue-select/dist/vue-select.css";
+import _ from "lodash-es";
 
 export default {
   name: "ShoppingItem",
   data: () => {
     return {
-      item: {
-        id: null,
-        name: null,
-        category: {
-          id: null,
-          name: null
-        },
-        brand: {
-          id: null,
-          name: null
-        },
-        quantity: null,
-        unitPrice: null,
-        unit: "",
-        currency: "MXN"
-      },
-      filteredBrandOptions: [],
-      brandProps: {
-        id: "brand_input",
-        placeholder: "Item's brand..."
-      },
-      filteredCategoryOptions: [],
-      categoryProps: {
-        id: "autosuggest__category_input",
-        placeholder: "Item's category..."
-      },
-      filteredItemOptions: [],
-      itemProps: {
-        id: "autosuggest__item_input",
-        placeholder: "What did you buy?."
-      },
-      limit: 10,
       expand: false,
+      itemSearch: null,
+      itemSelection: null,
+      itemEntries: null,
+      categorySearch: null,
+      categorySelection: null,
+      categoryEntries: null,
+      brandSearch: null,
+      brandSelection: null,
+      brandEntries: null,
+      quantity: null,
+      unitPrice: null,
+      unit: null,
       formatter: new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -127,121 +88,169 @@ export default {
   },
   computed: {
     totalPrice() {
-      if (!this.item || !this.item.unitPrice || !this.item.quantity) {
+      if (_.isNil(this.unitPrice) || _.isNil(this.quantity)) {
         return null;
       }
-      return this.formatter.format(this.item.unitPrice * this.item.quantity);
+      return this.formatter.format(this.unitPrice * this.quantity);
+    },
+    items() {
+      if (this.itemEntries === null || this.itemEntries.length === 0) return [];
+
+      return this.itemEntries.map(itemEntry => {
+        return {
+          text: itemEntry.name,
+          value: itemEntry
+        };
+      });
+    },
+    categoryItems() {
+      if (this.categoryEntries === null || this.categoryEntries.length === 0)
+        return [];
+
+      return this.categoryEntries.map(categoryEntry => {
+        return {
+          text: categoryEntry.name,
+          value: categoryEntry
+        };
+      });
+    },
+    brandItems() {
+      if (this.brandEntries === null || this.brandEntries.length === 0)
+        return [];
+
+      return this.brandEntries.map(brandEntry => {
+        return {
+          text: brandEntry.name,
+          value: brandEntry
+        };
+      });
+    },
+    item() {
+      if (_.isNil(this.itemSelection)) return null;
+
+      console.log("computed item");
+      console.log(this.itemSelection);
+      let itemId = null;
+      let itemName = null;
+      let brand = null;
+      let category = null;
+      if (_.isString(this.itemSelection)) {
+        itemName = this.itemSelection;
+      } else if (!_.isNil(this.itemSelection.value)) {
+        itemId = this.itemSelection.value.id;
+        itemName = this.itemSelection.value.name;
+        brand = this.itemSelection.value.brand;
+        category = this.itemSelection.value.category;
+      }
+      let item = {
+        id: itemId,
+        name: itemName,
+        brand: brand,
+        category: category,
+        unit: this.unit,
+        unitPrice: this.unitPrice,
+        quantity: this.quantity,
+        currency: "MXN"
+      };
+
+      this.$emit("update:item", item);
+      return item;
+    },
+    category() {
+      if (
+        this.categorySelection === undefined ||
+        this.categorySelection === null
+      )
+        return null;
+
+      if (_.isString(this.categorySelection)) {
+        return {
+          id: null,
+          name: this.categorySelection
+        };
+      } else {
+        return this.categorySelection.value;
+      }
+    },
+    brand() {
+      if (this.brandSelection === undefined || this.brandSelection === null)
+        return null;
+
+      if (_.isString(this.brandSelection)) {
+        return {
+          id: null,
+          name: this.brandSelection
+        };
+      } else {
+        return this.brandSelection.value;
+      }
     }
   },
-  methods: {
-    onItemInputChanged(text) {
+  watch: {
+    itemSearch(text) {
       if (text === "" || text === undefined) {
         return;
       }
-      this.item.id = null;
       let url = `${baseUrl}/items?name=${text}`;
       axios
         .get(url)
         .then(result => {
-          this.filteredItemOptions = [
-            {
-              data: result.data
-            }
-          ];
+          this.itemEntries = result.data;
         })
         .catch(error => console.log(error));
     },
-    onItemSelected(option) {
-      if (option == null || option.item == null) return;
-      const selectedItem = option.item;
-      this.item.name = selectedItem.name;
-      this.item.id = selectedItem.id;
-
-      if (selectedItem.brand == null) {
-        this.item.brand = {
-          id: null,
-          name: null
-        };
-      } else {
-        this.item.brand = selectedItem.brand;
-      }
-
-      if (selectedItem.category == null) {
-        this.item.category = {
-          id: null,
-          name: null
-        };
-      } else {
-        this.item.category = selectedItem.category;
-      }
-
-      this.$emit("update:item", this.item);
-    },
-    onBrandInputChanged(text) {
+    categorySearch(text) {
       if (text === "" || text === undefined) {
         return;
       }
-      this.item.brand.id = null;
-      let url = `${baseUrl}/brands?name=${text}`;
-      axios
-        .get(url)
-        .then(result => {
-          this.filteredBrandOptions = [
-            {
-              data: result.data
-            }
-          ];
-        })
-        .catch(error => console.log(error));
-    },
-    onBrandSelected(option) {
-      if (option == null) return;
-      this.item.brand = option.item;
-      this.$emit("update:item", this.item);
-    },
-    onCategoryInputChanged(text) {
-      if (text === "" || text === undefined) {
-        return;
-      }
-      this.item.category.id = null;
       let url = `${baseUrl}/categories?name=${text}`;
       axios
         .get(url)
         .then(result => {
-          this.filteredCategoryOptions = [
-            {
-              data: result.data
-            }
-          ];
+          this.categoryEntries = result.data;
         })
         .catch(error => console.log(error));
     },
-    onCategorySelected(option) {
-      if (option == null) return;
-      this.item.category = option.item;
-      this.$emit("update:item", this.item);
+    brandSearch(text) {
+      if (text === "" || text === undefined) {
+        return;
+      }
+      let url = `${baseUrl}/brands?name=${text}`;
+      axios
+        .get(url)
+        .then(result => {
+          this.brandEntries = result.data;
+        })
+        .catch(error => console.log(error));
     },
-    renderSuggestion(suggestion) {
-      return suggestion.item.name;
+    item() {
+      console.log("watch item");
+      console.log(this.item);
+      if (_.isNil(this.item)) {
+        this.brandSelection = null;
+        this.categorySelection = null;
+        return;
+      }
+
+      if (!_.isNil(this.item.brand)) {
+        this.brandSelection = {
+          text: this.item.brand.name,
+          value: this.item.brand
+        };
+      }
+
+      if (!_.isNil(this.item.category)) {
+        this.categorySelection = {
+          text: this.item.category.name,
+          value: this.item.category
+        };
+      }
     }
-  },
-  components: {
-    VueAutosuggest,
-    vSelect
   }
 };
 </script>
 
 <style scoped>
-input[type="number"] {
-  -moz-appearance: textfield;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-}
-
 .main-item-container {
   display: grid;
 }
@@ -250,58 +259,31 @@ input::-webkit-inner-spin-button {
   display: grid;
 }
 
-#name-label {
-  margin-left: 1em;
-  grid-area: item-name-label;
-}
-
-#name-input {
+.name-input {
   grid-area: item-name-input;
 }
 
-#brand-label {
-  margin-left: 1em;
-  grid-area: brand-label;
-}
-
-#brand-iput {
+.brand-input {
   grid-area: brand-input;
 }
 
-#category-label {
-  margin-left: 1em;
-  grid-area: category-label;
-}
-
-#category-input {
+.category-input {
   grid-area: category-input;
 }
 
-#quantity-label {
-  margin-left: 1em;
-  grid-area: quantity-label;
-}
-
-#quantity-input {
+.quantity-input {
   grid-area: quantity-input;
 }
 
-#quantity-unit-input {
+.quantity-unit-input {
   grid-area: quantity-unit-input;
-  margin-right: 1em;
 }
 
-#unit-price-label {
-  margin-left: 1em;
-  grid-area: unit-price-label;
-}
-
-#unit-price-input {
+.unit-price-input {
   grid-area: unit-price-input;
 }
 
 #total-price-label {
-  margin-left: 1em;
   grid-area: total-price-label;
 }
 
@@ -325,9 +307,10 @@ input::-webkit-inner-spin-button {
 @media (min-width: 1281px) {
   .main-item-container {
     padding-top: 1em;
+    padding-left: 1em;
     grid-template-columns: repeat(8, minmax(50px, 1fr));
     grid-template-areas:
-      "item-name-label item-name-input item-name-input . . . . . "
+      "item-name-input item-name-input . . . . . ."
       "item-details item-details item-details item-details item-details item-details item-details item-details"
       "total-price-label total-price-input total-price-input . . . . ."
       ". . . . . . . chevron";
@@ -336,10 +319,11 @@ input::-webkit-inner-spin-button {
   .item-details-container {
     grid-template-columns: repeat(8, minmax(50px, 1fr));
     grid-template-areas:
-      "brand-label brand-input brand-input . category-label category-input category-input ."
-      "quantity-label quantity-input quantity-unit-input quantity-unit-input unit-price-label unit-price-input unit-price-input ."
-      ". divider divider divider divider divider divider .";
+      "brand-input brand-input category-input category-input . . . ."
+      "unit-price-input unit-price-input quantity-input quantity-unit-input . . . . "
+      "divider divider divider divider divider divider . .";
     grid-area: item-details;
+    gap: 1em;
   }
 }
 

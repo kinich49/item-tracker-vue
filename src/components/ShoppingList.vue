@@ -4,17 +4,16 @@
       <h1 id="shopping-label">Shopping Receipt</h1>
       <label id="shopping-date-label">Shoping Date</label>
       <input id="shopping-date-input" v-model="shoppingDate" type="date" />
-      <label id="shopping-store-label">Store</label>
-      <vue-autosuggest
-        id="shopping-store-input"
-        v-model="store.name"
-        :suggestions="filteredStoreOptions"
-        :limit="10"
-        :input-props="storeProps"
-        :render-suggestion="renderSuggestion"
-        @input="onStoreInputChanged"
-        @selected="onStoreSelected"
-      />
+      <v-combobox
+        class="shopping-store-input"
+        v-model="storeSelection"
+        :items="items"
+        label="Store"
+        :search-input.sync="storeSearch"
+        placeholder="Where did you shop?"
+        hide-no-data
+        clearable
+      ></v-combobox>
 
       <div id="empty-message-container" v-if="shoppingItems.length <= 0">
         <p id="empty-message">No items yet. Try adding something!</p>
@@ -46,10 +45,10 @@
 
 <script>
 import ShoppingItem from "./ShoppingItem.vue";
-import { VueAutosuggest } from "vue-autosuggest";
 import axios from "axios";
 import { baseUrl } from "../constants";
 import { mixin } from "../mixins/common";
+import _ from "lodash-es";
 
 export default {
   name: "ShoppingList",
@@ -57,22 +56,15 @@ export default {
   data() {
     return {
       shoppingDate: null,
-      store: {
-        id: null,
-        name: null
-      },
       shoppingItems: [],
-      filteredStoreOptions: [],
-      storeProps: {
-        id: "autosuggest__store_input",
-        placeholder: "Where did you shop?"
-      },
-      limit: 10
+      storeSearch: null,
+      storeSelection: null,
+      storeEntries: null
     };
   },
   computed: {
     isReadyToSumbit() {
-      if (!this.store) return false;
+      if (!this.storeSelection) return false;
       if (!this.shoppingDate) return false;
 
       let isValid = false;
@@ -81,29 +73,33 @@ export default {
         if (!isValid) break;
       }
       return isValid;
+    },
+    items() {
+      if (this.storeEntries === null || this.storeEntries.length === 0)
+        return [];
+
+      return this.storeEntries.map(storeEntry => {
+        return {
+          text: storeEntry.name,
+          value: storeEntry
+        };
+      });
+    },
+    store() {
+      if (this.storeSelection === undefined || this.storeSelection === null)
+        return null;
+
+      if (_.isString(this.storeSelection)) {
+        return {
+          id: null,
+          name: this.storeSelection
+        };
+      } else {
+        return this.storeSelection.value;
+      }
     }
   },
   methods: {
-    onStoreSelected(option) {
-      this.store = option.item;
-    },
-    onStoreInputChanged(text) {
-      if (text === "" || text === undefined) {
-        return;
-      }
-      this.store.id = null;
-      let url = `${baseUrl}/stores?name=${text}`;
-      axios
-        .get(url)
-        .then(result => {
-          this.filteredStoreOptions = [
-            {
-              data: result.data
-            }
-          ];
-        })
-        .catch(error => console.log(error));
-    },
     addBlankShoppingItem() {
       let index = this.shoppingItems.length + 1;
       let shoppingItem = {
@@ -138,19 +134,28 @@ export default {
       const url = `${baseUrl}/shoppingLists`;
       axios
         .post(url, shoppingList)
-        .then(response => {
-          console.log(response);
+        .then(() => {
           this.$router.push("/");
         })
         .catch(error => console.log(error));
-    },
-    renderSuggestion(suggestion) {
-      return suggestion.item.name;
+    }
+  },
+  watch: {
+    storeSearch(text) {
+      if (text === "" || text === undefined) {
+        return;
+      }
+      let url = `${baseUrl}/stores?name=${text}`;
+      axios
+        .get(url)
+        .then(result => {
+          this.storeEntries = result.data;
+        })
+        .catch(error => console.log(error));
     }
   },
   components: {
-    ShoppingItem,
-    VueAutosuggest
+    ShoppingItem
   }
 };
 </script>
@@ -178,14 +183,7 @@ export default {
   line-height: 90%;
 }
 
-#shopping-store-label {
-  grid-area: store-label;
-  padding-right: 0.5em;
-  justify-self: end;
-  text-align: right;
-}
-
-#shopping-store-input {
+.shopping-store-input {
   grid-area: store-input;
 }
 
@@ -245,7 +243,7 @@ export default {
     grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr 1fr;
     grid-template-areas:
       ". . . shopping-label shopping-label . . ."
-      ". . store-label store-label store-input store-input . ."
+      ". . .  store-input store-input . . ."
       ". . date-label date-label date-input date-input . . "
       ". . . .  . submit-list . ."
       ". . shopping-list shopping-list shopping-list shopping-list . .";

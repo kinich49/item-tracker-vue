@@ -7,7 +7,6 @@
       :items="items"
       :search-input.sync="search"
       placeholder="Search for an item, brand or category"
-      return-object
     ></v-autocomplete>
     <div id="search-results">
       <ShoppingItemAnalytics
@@ -115,7 +114,7 @@ export default {
         .catch(error => console.log(error));
     },
     selection(selection) {
-      let url = this.getAnalyticsUrl(selection.value);
+      let url = this.getAnalyticsUrl(selection);
       this.analytics = [];
       axios
         .get(url)
