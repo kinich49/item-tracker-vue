@@ -23,11 +23,11 @@
           </v-list-item-icon>
           <v-list-item-content>Home</v-list-item-content>
         </v-list-item>
-        <v-list-item to="/shoppingList">
+        <v-list-item to="/blankShoppingList">
           <v-list-item-icon>
             <v-icon>mdi-receipt</v-icon>
           </v-list-item-icon>
-          <v-list-item-content>Shopping List</v-list-item-content>
+          <v-list-item-content>Blank Shopping List</v-list-item-content>
         </v-list-item>
         <v-list-item to="/analytics" link>
           <v-list-item-icon>

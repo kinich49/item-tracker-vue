@@ -51,7 +51,7 @@ import { mixin } from "../mixins/common";
 import _ from "lodash-es";
 
 export default {
-  name: "ShoppingList",
+  name: "BlankShoppingList",
   mixins: [mixin],
   data() {
     return {

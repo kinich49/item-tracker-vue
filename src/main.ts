@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import App from './App.vue'
-import ShoppingList from './components/ShoppingList.vue'
+import BlankShoppingList from './components/BlankShoppingList.vue'
 import Home from './components/Home.vue'
 import AnalyticsSearch from './components/AnalyticsSearch.vue'
 import VueRouter from 'vue-router'
@@ -16,8 +16,8 @@ const routes = [
     component: Home
   },
   {
-    path: '/shoppingList',
-    component: ShoppingList
+    path: '/blankShoppingList',
+    component: BlankShoppingList
   },
   {
     path: '/analytics',
