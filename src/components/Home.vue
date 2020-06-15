@@ -1,11 +1,12 @@
 <template>
   <div>
-    <main>
+    <div id="content">
       <h1>Welcome to Item Tracker</h1>
-      <div id="content">
+      <div id="main">
         <p>
-          This is a simple app to keep track of your week-to-week shopping.
-          Simply go to Shopping List and add a new shopping receipt!
+          This is a simple app to keep track of your week-to-week shopping. If you're curious about price increments throughout
+          the year of things you buy periodically, or price differences between stores you frequently alternate,
+          simply go to Shopping List and start saving those receipts!
         </p>
 
         <p>
@@ -32,8 +33,9 @@
           There are different categories already persisted, for Example
           <em>'Dairy and eggs'</em> or
           <em>'Household Cleaning and Disposables'</em>
-        among others. If your current item does not fit into any current category, just type 
-        the name and it will be persisted for future items</p>
+          among others. If your current item does not fit into any current category, just type
+          the name and it will be persisted for future items
+        </p>
 
         <p>For now, the item's Brand is optional due to several items not having a specific brand such as fruits and vegetables.</p>
 
@@ -58,7 +60,7 @@
           and file an issue. Any pull request is appreciated!
         </p>
       </div>
-    </main>
+    </div>
 
     <v-footer absolute class="font-weight-light">
       <v-col class="text-end" cols="12">
@@ -75,20 +77,17 @@ export default {};
 
 
 <style scoped>
-main {
-  display: grid;
+#content {
   padding: 24px;
 }
 
-#content {
-  grid-area: content;
-}
 /* 
   ##Device = Desktops
   ##Screen = 1281px to higher resolution desktops
 */
 @media (min-width: 1281px) {
-  main {
+  #content {
+    display: grid;
     grid-template-columns: 0.5fr 1fr 0.5fr;
     grid-template-rows: 75px 1fr;
     grid-template-areas:
@@ -101,7 +100,7 @@ main {
     justify-self: center;
   }
 
-  #content {
+  #main {
     grid-area: content;
   }
 }
@@ -111,7 +110,7 @@ main {
   ##Screen = B/w 320px to 479px
 */
 @media (min-width: 320px) and (max-width: 480px) {
-  main {
+  #content {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
