@@ -6,6 +6,7 @@
       v-model="selection"
       :items="items"
       :search-input.sync="search"
+      hide-no-data
       placeholder="Search for an item, brand or category"
     ></v-autocomplete>
     <div id="search-results">
@@ -168,33 +169,60 @@ export default {
 }
 
 /* 
+  ##Device = Laptops, Desktops
+  ##Screen = B/w 1025px to 1280px
+
+  or
+
   ##Device = Desktops
   ##Screen = 1281px to higher resolution desktops
 */
-@media (min-width: 1281px) {
+@media (min-width: 1025px) and (max-width: 1280px), (min-width: 1281px) {
   #main {
+    padding-top: 2em;
     grid-template-columns: repeat(12, 1fr);
-    grid-template-rows: repeat(3, minmax(75px, 1fr)) 5fr;
+    grid-template-rows: repeat(2, minmax(75px, 1fr)) 5fr;
     grid-template-areas:
-      ". . . . . . . . . . . ."
       ". . . . . title title . . . . . "
-      ". . . . . search search . . . . ."
+      ". . search search search . . . . . . ."
       ". . results results results results results results results results . . ";
+  }
+}
+
+/* 
+  ##Device = Tablets, Ipads (portrait)
+  ##Screen = B/w 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  #main {
+    padding-top: 1em;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, minmax(1fr, 75px)) 5fr;
+    grid-template-areas:
+      ". title title  ."
+      ". search search ."
+      "results results results results";
   }
 }
 
 /* 
   ##Device = Most of the Smartphones Mobiles (Portrait)
   ##Screen = B/w 320px to 479px
+
+  or
+
+  ##Device = Low Resolution Tablets, Mobiles (Landscape)
+  ##Screen = B/w 481px to 767px
 */
-@media (min-width: 320px) and (max-width: 480px) {
+@media (min-width: 320px) and (max-width: 480px),
+  (min-width: 481px) and (max-width: 767px) {
   #main {
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(3, minmax(75px, 1fr)) 5fr;
+    grid-template-rows: repeat(2, minmax(1fr, 75px)) 5fr;
     grid-template-areas:
-      ". . . ."
       ". title title  ."
-      ". search search ."
+      "search search search search"
       "results results results results";
   }
 }
