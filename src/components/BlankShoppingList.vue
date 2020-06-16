@@ -233,19 +233,23 @@ export default {
 }
 
 /* 
+  ##Device = Laptops, Desktops
+  ##Screen = B/w 1025px to 1280px
+  or
+
   ##Device = Desktops
   ##Screen = 1281px to higher resolution desktops
 */
-@media (min-width: 1281px) {
+@media (min-width: 1025px) and (max-width: 1280px), (min-width: 1281px) {
   #main {
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr 1fr;
     grid-template-areas:
       ". . . shopping-label shopping-label . . ."
       ". . .  store-input store-input . . ."
-      ". . date-label date-label date-input date-input . . "
-      ". . . .  . submit-list . ."
-      ". . shopping-list shopping-list shopping-list shopping-list . .";
+      ". . date-label date-label date-input . . . "
+      ". . . . submit-list  . . ."
+      ". . . shopping-list shopping-list . . .";
   }
 
   #fab-container {
@@ -256,18 +260,47 @@ export default {
 }
 
 /* 
-  ##Device = Most of the Smartphones Mobiles (Portrait)
-  ##Screen = B/w 320px to 479px
+  ##Device = Tablets, Ipads (portrait)
+  ##Screen = B/w 768px to 1024px
 */
-@media (min-width: 320px) and (max-width: 480px) {
+
+@media (min-width: 768px) and (max-width: 1024px) {
   #main {
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr;
     grid-template-areas:
       ". shopping-label shopping-label ."
-      "store-label store-label store-input store-input"
+      ". store-input store-input ."
       "date-label date-label date-input date-input"
       ". . . submit-list"
+      "shopping-list shopping-list shopping-list shopping-list";
+  }
+
+  #fab-container {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 1fr;
+    grid-template-areas: ". . . add-item";
+  }
+}
+/* 
+  ##Device = Most of the Smartphones Mobiles (Portrait)
+  ##Screen = B/w 320px to 479px
+
+  or
+
+  ##Device = Low Resolution Tablets, Mobiles (Landscape)
+  ##Screen = B/w 481px to 767px
+*/
+@media (min-width: 320px) and (max-width: 480px),
+  (min-width: 481px) and (max-width: 767px) {
+  #main {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr;
+    grid-template-areas:
+      ". shopping-label shopping-label ."
+      ". store-input store-input ."
+      "date-label date-label date-input date-input"
+      "submit-list submit-list submit-list submit-list"
       "shopping-list shopping-list shopping-list shopping-list";
   }
 

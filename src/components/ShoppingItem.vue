@@ -2,12 +2,12 @@
   <v-card class="main-item-container">
     <v-combobox
       v-model="itemSelection"
-      class="name-input"
+      class="item-input"
       :items="items"
       :search-input.sync="itemSearch"
       label="Item"
       placeholder="What did you buy?"
-      hint="If you select an item, current Brand and Category will be overriden"
+      hint="If you select an item, Brand and Category will be overriden"
       hide-no-data
       clearable
     />
@@ -19,7 +19,7 @@
           :items="brandItems"
           :search-input.sync="brandSearch"
           label="Brand"
-          placeholder="Type the item's brand"
+          placeholder="Search a brand..."
           hide-no-data
           clearable
         />
@@ -30,7 +30,7 @@
           :items="categoryItems"
           :search-input.sync="categorySearch"
           label="Category"
-          placeholder="Type the item's category"
+          placeholder="Search a category..."
           hide-no-data
           clearable
         />
@@ -41,9 +41,8 @@
           class="unit-price-input"
           v-model.number="unitPrice"
           label="Unit Price"
-          placeholder="How much did it cost?"
+          placeholder="What's the price?"
         />
-        <v-divider insent id="divider"></v-divider>
       </div>
     </v-expand-transition>
 
@@ -66,7 +65,7 @@ export default {
   name: "ShoppingItem",
   data: () => {
     return {
-      expand: false,
+      expand: true,
       itemSearch: null,
       itemSelection: null,
       itemEntries: null,
@@ -78,7 +77,7 @@ export default {
       brandEntries: null,
       quantity: null,
       unitPrice: null,
-      unit: null,
+      unit: "Unit",
       formatter: new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -259,8 +258,8 @@ export default {
   display: grid;
 }
 
-.name-input {
-  grid-area: item-name-input;
+.item-input {
+  grid-area: item-input;
 }
 
 .brand-input {
@@ -301,57 +300,94 @@ export default {
 }
 
 /* 
+  ##Device = Laptops, Desktops
+  ##Screen = B/w 1025px to 1280px
+  or
+
   ##Device = Desktops
   ##Screen = 1281px to higher resolution desktops
 */
-@media (min-width: 1281px) {
+@media (min-width: 1025px) and (max-width: 1280px), (min-width: 1281px) {
   .main-item-container {
-    padding-top: 1em;
-    padding-left: 1em;
+    padding: 1em;
     grid-template-columns: repeat(8, minmax(50px, 1fr));
     grid-template-areas:
-      "item-name-input item-name-input . . . . . ."
+      "item-input item-input item-input item-input item-input item-input . ."
       "item-details item-details item-details item-details item-details item-details item-details item-details"
       "total-price-label total-price-input total-price-input . . . . ."
       ". . . . . . . chevron";
   }
 
   .item-details-container {
-    grid-template-columns: repeat(8, minmax(50px, 1fr));
+    grid-template-columns: repeat(6, minmax(50px, 1fr));
     grid-template-areas:
-      "brand-input brand-input category-input category-input . . . ."
-      "unit-price-input unit-price-input quantity-input quantity-unit-input . . . . "
-      "divider divider divider divider divider divider . .";
+      "brand-input brand-input brand-input category-input category-input category-input "
+      "unit-price-input unit-price-input quantity-input quantity-input quantity-unit-input quantity-unit-input ";
     grid-area: item-details;
     gap: 1em;
   }
 }
 
 /* 
-  ##Device = Most of the Smartphones Mobiles (Portrait)
-  ##Screen = B/w 320px to 479px
+  ##Device = Tablets, Ipads (portrait)
+  ##Screen = B/w 768px to 1024px
 */
-
-@media (min-width: 320px) and (max-width: 480px) {
+@media (min-width: 768px) and (max-width: 1024px) {
   .main-item-container {
     padding-top: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
     grid-template-columns: repeat(4, minmax(50px, 1fr));
     grid-template-areas:
-      "item-name-label item-name-input item-name-input ."
+      "item-input item-input item-input item-input"
       "item-details item-details item-details item-details"
       "total-price-label total-price-input . ."
       ". . . chevron";
   }
 
   .item-details-container {
+    grid-area: item-details;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-areas:
+      " brand-input brand-input category-input category-input"
+      " quantity-input quantity-unit-input . ."
+      " unit-price-input . . .";
+    gap: 0.5em;
+  }
+}
+
+/* 
+  ##Device = Most of the Smartphones Mobiles (Portrait)
+  ##Screen = B/w 320px to 479px
+
+  or
+
+  ##Device = Low Resolution Tablets, Mobiles (Landscape)
+  ##Screen = B/w 481px to 767px
+*/
+@media (min-width: 320px) and (max-width: 480px),
+  (min-width: 481px) and (max-width: 767px) {
+  .main-item-container {
+    padding-top: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
     grid-template-columns: repeat(4, minmax(50px, 1fr));
     grid-template-areas:
-      "brand-label brand-input brand-input ."
-      "category-label category-input category-input ."
-      "quantity-label quantity-input quantity-unit-input . "
-      "unit-price-label unit-price-input unit-price-input ."
-      ". divider divider divider";
+      "item-input item-input item-input item-input"
+      "item-details item-details item-details item-details"
+      "total-price-label total-price-input . ."
+      ". . . chevron";
+  }
+
+  .item-details-container {
     grid-area: item-details;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas:
+      " brand-input brand-input brand-input"
+      " category-input category-input category-input"
+      " quantity-input quantity-unit-input ."
+      " unit-price-input unit-price-input .";
+      gap: 1em;
   }
 }
 </style>
