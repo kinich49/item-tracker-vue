@@ -34,15 +34,15 @@
           hide-no-data
           clearable
         />
-
-        <v-text-field label="Quantity" v-model.number="quantity" class="quantity-input" />
-        <v-select class="quantity-unit-input" v-model="unit" :items="['KG','Unit']" label="Unit"></v-select>
         <v-text-field
           class="unit-price-input"
           v-model.number="unitPrice"
           label="Unit Price"
           placeholder="What's the price?"
         />
+        <v-text-field label="Quantity" v-model.number="quantity" class="quantity-input" />
+        <v-select class="quantity-unit-input" v-model="unit" :items="['KG','Unit']" label="Unit"></v-select>
+
       </div>
     </v-expand-transition>
 

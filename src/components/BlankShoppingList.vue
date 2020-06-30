@@ -2,8 +2,6 @@
   <div>
     <div id="main">
       <h1 id="shopping-label">Shopping Receipt</h1>
-      <label id="shopping-date-label">Shoping Date</label>
-      <input id="shopping-date-input" v-model="shoppingDate" type="date" />
       <v-combobox
         class="shopping-store-input"
         v-model="storeSelection"
@@ -14,7 +12,14 @@
         hide-no-data
         clearable
       ></v-combobox>
-
+      <input id="shopping-date-input" v-model="shoppingDate" type="date" />
+      <v-btn
+        color="secondary"
+        tile
+        id="submit-shopping-list"
+        v-on:click="submitShoppingList()"
+        :disabled="!isReadyToSumbit"
+      >Save</v-btn>
       <div id="empty-message-container" v-if="shoppingItems.length <= 0">
         <p id="empty-message">No items yet. Try adding something!</p>
       </div>
@@ -26,14 +31,6 @@
           v-bind:item.sync="shoppingItem.item"
         />
       </div>
-
-      <v-btn
-        color="secondary"
-        tile
-        id="submit-shopping-list"
-        v-on:click="submitShoppingList()"
-        :disabled="!isReadyToSumbit"
-      >Save</v-btn>
     </div>
     <div id="fab-container">
       <v-btn fab id="shopping-add-item" color="primary" v-on:click="addBlankShoppingItem()">
@@ -165,6 +162,7 @@ export default {
 </script>
 
 <style scoped>
+
 #main {
   display: grid;
   padding: 0 24px;
@@ -189,13 +187,6 @@ export default {
 
 .shopping-store-input {
   grid-area: store-input;
-}
-
-#shopping-date-label {
-  grid-area: date-label;
-  padding-right: 0.5em;
-  justify-self: end;
-  text-align: right;
 }
 
 #shopping-date-input {
@@ -236,6 +227,7 @@ export default {
   color: dimgray;
 }
 
+
 /* 
   ##Device = Laptops, Desktops
   ##Screen = B/w 1025px to 1280px
@@ -246,20 +238,21 @@ export default {
 */
 @media (min-width: 1025px) and (max-width: 1280px), (min-width: 1281px) {
   #main {
-    grid-template-columns: repeat(8, 1fr);
+    gap: 1em;
+    grid-template-columns: 1fr repeat(4, 200px) 1fr;
     grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr 1fr;
     grid-template-areas:
-      ". . . shopping-label shopping-label . . ."
-      ". . .  store-input store-input . . ."
-      ". . date-label date-label date-input . . . "
-      ". . . . submit-list  . . ."
-      ". . . shopping-list shopping-list . . .";
+      " . . shopping-label shopping-label .  ."
+      " .  . store-input store-input  . . "
+      " .  . date-input  . . . "
+      " . . . submit-list . . "
+      " . shopping-list shopping-list shopping-list shopping-list . ";
   }
 
   #fab-container {
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: 1fr repeat(4, 200px) 1fr;
     grid-template-rows: 1fr;
-    grid-template-areas: ". . . . . add-item . .";
+    grid-template-areas: ". . . . add-item . ";
   }
 }
 
@@ -270,20 +263,21 @@ export default {
 
 @media (min-width: 768px) and (max-width: 1024px) {
   #main {
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr;
+    gap:1em;
+    grid-template-columns: 1fr repeat(4, minmax(150px, 200px)) 1fr;
+    grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr 1fr;
     grid-template-areas:
-      ". shopping-label shopping-label ."
-      ". store-input store-input ."
-      "date-label date-label date-input date-input"
-      ". . . submit-list"
-      "shopping-list shopping-list shopping-list shopping-list";
+      " . . shopping-label shopping-label .  ."
+      " .  . store-input store-input  . . "
+      " .  . date-input  . . . "
+      " . . . . submit-list . "
+      " . shopping-list shopping-list shopping-list shopping-list . ";
   }
 
   #fab-container {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr repeat(4, 200px) 1fr;
     grid-template-rows: 1fr;
-    grid-template-areas: ". . . add-item";
+    grid-template-areas: ". . . . add-item . ";
   }
 }
 /* 
@@ -298,14 +292,14 @@ export default {
 @media (min-width: 320px) and (max-width: 480px),
   (min-width: 481px) and (max-width: 767px) {
   #main {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr;
     grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr;
     grid-template-areas:
-      ". shopping-label shopping-label ."
-      ". store-input store-input ."
-      "date-label date-label date-input date-input"
-      "submit-list submit-list submit-list submit-list"
-      "shopping-list shopping-list shopping-list shopping-list";
+      "shopping-label"
+      "store-input "
+      "date-input"
+      "submit-list "
+      "shopping-list ";
   }
 
   #fab-container {
