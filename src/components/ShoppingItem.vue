@@ -58,7 +58,7 @@
 
 <script>
 import axios from "axios";
-import { baseUrl } from "../constants";
+import defaultAuth, { baseUrl } from "../constants";
 import _ from "lodash-es";
 
 export default {
@@ -192,7 +192,9 @@ export default {
       }
       let url = `${baseUrl}/items?name=${text}`;
       axios
-        .get(url)
+        .get(url, {
+          auth: defaultAuth
+        })
         .then(result => {
           this.itemEntries = result.data;
         })
@@ -204,7 +206,9 @@ export default {
       }
       let url = `${baseUrl}/categories?name=${text}`;
       axios
-        .get(url)
+        .get(url, {
+          auth: defaultAuth
+        })
         .then(result => {
           this.categoryEntries = result.data;
         })
@@ -216,7 +220,9 @@ export default {
       }
       let url = `${baseUrl}/brands?name=${text}`;
       axios
-        .get(url)
+        .get(url, {
+          auth: defaultAuth
+        })
         .then(result => {
           this.brandEntries = result.data;
         })
@@ -387,7 +393,7 @@ export default {
       " category-input category-input category-input"
       " quantity-input quantity-unit-input ."
       " unit-price-input unit-price-input .";
-      gap: 1em;
+    gap: 1em;
   }
 }
 </style>

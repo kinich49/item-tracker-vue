@@ -23,7 +23,7 @@
 <script>
 import ShoppingItemAnalytics from "./ShoppingItemAnalytics";
 import axios from "axios";
-import { baseUrl } from "../constants";
+import defaultAuth, { baseUrl } from "../constants";
 
 export default {
   name: "AnalyticsSearch",
@@ -108,7 +108,9 @@ export default {
       if (text === null || text === "") return;
       let url = `${baseUrl}/suggestions?name=${text}`;
       axios
-        .get(url)
+        .get(url, {
+          auth: defaultAuth
+        })
         .then(response => {
           this.entries = response.data;
         })
@@ -118,7 +120,9 @@ export default {
       let url = this.getAnalyticsUrl(selection);
       this.analytics = [];
       axios
-        .get(url)
+        .get(url, {
+          auth: defaultAuth
+        })
         .then(response => {
           let data = response.data;
           data.forEach(element => {

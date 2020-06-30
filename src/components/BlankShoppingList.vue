@@ -46,7 +46,7 @@
 <script>
 import ShoppingItem from "./ShoppingItem.vue";
 import axios from "axios";
-import { baseUrl } from "../constants";
+import defaultAuth, { baseUrl } from "../constants";
 import { mixin } from "../mixins/common";
 import _ from "lodash-es";
 
@@ -133,7 +133,9 @@ export default {
       };
       const url = `${baseUrl}/shoppingLists`;
       axios
-        .post(url, shoppingList)
+        .post(url, shoppingList, {
+          auth: defaultAuth
+        })
         .then(() => {
           this.$router.push("/");
         })
@@ -147,7 +149,9 @@ export default {
       }
       let url = `${baseUrl}/stores?name=${text}`;
       axios
-        .get(url)
+        .get(url, {
+          auth: defaultAuth
+        })
         .then(result => {
           this.storeEntries = result.data;
         })
