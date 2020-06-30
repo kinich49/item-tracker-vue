@@ -196,7 +196,7 @@ export default {
           auth: defaultAuth
         })
         .then(result => {
-          this.itemEntries = result.data;
+          this.itemEntries = result.data.data;
         })
         .catch(error => console.log(error));
     },
@@ -210,7 +210,7 @@ export default {
           auth: defaultAuth
         })
         .then(result => {
-          this.categoryEntries = result.data;
+          this.categoryEntries = result.data.data;
         })
         .catch(error => console.log(error));
     },
@@ -224,7 +224,7 @@ export default {
           auth: defaultAuth
         })
         .then(result => {
-          this.brandEntries = result.data;
+          this.brandEntries = result.data.data;
         })
         .catch(error => console.log(error));
     },

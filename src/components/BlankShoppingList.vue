@@ -153,7 +153,7 @@ export default {
           auth: defaultAuth
         })
         .then(result => {
-          this.storeEntries = result.data;
+          this.storeEntries = result.data.data;
         })
         .catch(error => console.log(error));
     }

@@ -112,7 +112,7 @@ export default {
           auth: defaultAuth
         })
         .then(response => {
-          this.entries = response.data;
+          this.entries = response.data.data;
         })
         .catch(error => console.log(error));
     },
@@ -124,7 +124,7 @@ export default {
           auth: defaultAuth
         })
         .then(response => {
-          let data = response.data;
+          let data = response.data.data;
           data.forEach(element => {
             let nextIndex = this.currentIndex++;
             let newAnalytics = {
