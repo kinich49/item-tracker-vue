@@ -112,7 +112,7 @@ export default {
           auth: defaultAuth
         })
         .then(response => {
-          this.entries = response.data.data;
+          if (response.data.data) this.entries = response.data.data;
         })
         .catch(error => console.log(error));
     },
@@ -123,6 +123,7 @@ export default {
         .get(url, {
           auth: defaultAuth
         })
+        .then()
         .then(response => {
           let data = response.data.data;
           data.forEach(element => {
@@ -151,25 +152,31 @@ export default {
 <style scoped>
 #main {
   display: grid;
-  padding: 0 24px;
+  padding-top: 1em;
+  grid-template-columns: 1fr repeat(2, minmax(150px, 3fr)) 1fr;
+  grid-template-rows: repeat(2, minmax(1fr, 75px)) 5fr;
 }
 
 #title {
-  grid-area: title;
-  justify-self: center;
+  grid-column: 2 / 4;
+  text-align: center;
 }
 
 .search-input {
-  grid-area: search;
+  grid-column: 2 / 4;
+  grid-row-start: 2;
+  max-width: 400px;
+  min-width: 300px;
+  place-self: center;
 }
 
 #search-results {
-  grid-area: results;
-  display: flex;
+  grid-column: 2 / 4;
+  grid-row-start: 3;
+  display: grid;
   gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  justify-items: center;
 }
 
 /* 
@@ -181,37 +188,20 @@ export default {
   ##Device = Desktops
   ##Screen = 1281px to higher resolution desktops
 */
-@media (min-width: 1025px) and (max-width: 1280px), (min-width: 1281px) {
-  #main {
-    padding-top: 2em;
-    grid-template-columns: repeat(12, 1fr);
-    grid-template-rows: repeat(2, minmax(75px, 1fr)) 5fr;
-    grid-template-areas:
-      ". . . . . title title . . . . . "
-      ". . search search search . . . . . . ."
-      ". . results results results results results results results results . . ";
-  }
-}
+/* @media (min-width: 1025px) and (max-width: 1280px), (min-width: 1281px) {
+
+} */
 
 /* 
   ##Device = Tablets, Ipads (portrait)
   ##Screen = B/w 768px to 1024px
 */
 
-@media (min-width: 768px) and (max-width: 1024px) {
-  #main {
-    padding-top: 1em;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, minmax(1fr, 75px)) 5fr;
-    grid-template-areas:
-      ". title title  ."
-      ". search search ."
-      "results results results results";
-  }
-}
+/* @media (min-width: 768px) and (max-width: 1024px) {
 
-/* 
-  ##Device = Most of the Smartphones Mobiles (Portrait)
+} */
+
+/*  ##Device = Most of the Smartphones Mobiles (Portrait)
   ##Screen = B/w 320px to 479px
 
   or
@@ -221,13 +211,8 @@ export default {
 */
 @media (min-width: 320px) and (max-width: 480px),
   (min-width: 481px) and (max-width: 767px) {
-  #main {
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, minmax(1fr, 75px)) 5fr;
-    grid-template-areas:
-      ". title title  ."
-      "search search search search"
-      "results results results results";
+  .search-input {
+    grid-column: 2 / 4;
   }
 }
 </style>
