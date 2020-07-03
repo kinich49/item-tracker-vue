@@ -13,13 +13,7 @@
         clearable
       ></v-combobox>
       <input id="shopping-date-input" v-model="shoppingDate" type="date" />
-      <v-btn
-        color="secondary"
-        tile
-        id="submit-shopping-list"
-        v-on:click="submitShoppingList()"
-        :disabled="!isReadyToSumbit"
-      >Save</v-btn>
+      <v-btn color="primary" tile id="submit-shopping-list" v-on:click="submitShoppingList()">Save</v-btn>
       <div id="empty-message-container" v-if="shoppingItems.length <= 0">
         <p id="empty-message">No items yet. Try adding something!</p>
       </div>
@@ -28,8 +22,14 @@
         <ShoppingItem
           v-for="shoppingItem in shoppingItems"
           v-bind:key="shoppingItem.index"
-          v-bind:item.sync="shoppingItem.item"
+          v-bind:itemname.sync="shoppingItem.item.name"
+          v-bind:itemid.sync="shoppingItem.item.id"
+          v-bind:unitprice.sync="shoppingItem.item.unitPrice"
+          v-bind:quantity.sync="shoppingItem.item.quantity"
+          v-bind:brand.sync="shoppingItem.item.brand"
+          v-bind:category.sync="shoppingItem.item.category"
         />
+        <!-- <ShoppingItem v-for="shoppingItem in shoppingItems" v-bind:key="shoppingItem.index" /> -->
       </div>
     </div>
     <div id="fab-container">
@@ -44,15 +44,14 @@
 import ShoppingItem from "./ShoppingItem.vue";
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
-import { mixin } from "../mixins/common";
 import _ from "lodash-es";
 
 export default {
   name: "BlankShoppingList",
-  mixins: [mixin],
   data() {
     return {
       shoppingDate: null,
+      testBrand: null,
       shoppingItems: [],
       storeSearch: null,
       storeSelection: null,
@@ -60,19 +59,8 @@ export default {
     };
   },
   computed: {
-    isReadyToSumbit() {
-      if (!this.storeSelection) return false;
-      if (!this.shoppingDate) return false;
-
-      let isValid = false;
-      for (let item of this.shoppingItems) {
-        isValid = this.validateShoppingItem(item.item);
-        if (!isValid) break;
-      }
-      return isValid;
-    },
     items() {
-      if (this.storeEntries === null || this.storeEntries.length === 0)
+      if (_.isNil(this.storeEntries) || this.storeEntries.length == 0)
         return [];
 
       return this.storeEntries.map(storeEntry => {
@@ -97,32 +85,68 @@ export default {
     }
   },
   methods: {
+    isReadyToSumbit() {
+      if (!this.storeSelection) return false;
+      if (!this.shoppingDate) return false;
+
+      if (!this.shoppingItems || this.shoppingItems.length == 0) return false;
+
+      let isReady = false;
+      for (let shoppingItem of this.shoppingItems) {
+        isReady = this.isShoppingItemValid(shoppingItem.item);
+        if (!isReady) break;
+      }
+      return isReady;
+    },
+    isShoppingItemValid(item) {
+      return (
+        !_.isNil(item) &&
+        !_.isNil(item.category) &&
+        this.isItemElementNameValid(item) &&
+        this.isItemElementNameValid(item.category) &&
+        this.isItemNumberValid(item.quantity) &&
+        this.isItemNumberValid(item.unitPrice)
+      );
+    },
+    isItemElementNameValid(value) {
+      return (
+        !_.isNil(value) && !_.isNil(value.name) && !_.isNil(value.name.trim())
+      );
+    },
+    isItemStringValid(value) {
+      return !_.isNil(value) && !_.isNil(value.trim());
+    },
+    isItemNumberValid(value) {
+      return !_.isNil(value) && value > 0;
+    },
+
     addBlankShoppingItem() {
       let index = this.shoppingItems.length + 1;
       let shoppingItem = {
         index: index,
-        item: null
+        item: {
+          name: null,
+          id: null,
+          unitPrice: null,
+          quantity: null,
+          brand: null,
+          category: null,
+          currency: "MXN"
+        }
       };
       this.shoppingItems.push(shoppingItem);
     },
     submitShoppingList() {
-      let elements = [];
-      if (this.shoppingItems && this.shoppingItems.length > 0) {
-        elements = this.shoppingItems
-          .map(i => i.item)
-          .map(i => {
-            return {
-              itemId: i.id,
-              name: i.name,
-              category: i.category,
-              brand: i.brand,
-              quantity: i.quantity,
-              unitPrice: i.unitPrice,
-              unit: i.unit,
-              currency: i.currency
-            };
-          });
+      console.log(this.isReadyToSumbit());
+      if (!this.isReadyToSumbit()) {
+        console.log("Something went wrong");
+        return;
       }
+
+      let elements = [];
+
+      elements = this.shoppingItems.map(i => i.item);
+
       const shoppingList = {
         shoppingDate: this.shoppingDate,
         store: this.store,
@@ -162,7 +186,6 @@ export default {
 </script>
 
 <style scoped>
-
 #main {
   display: grid;
   padding: 0 24px;
@@ -227,7 +250,6 @@ export default {
   color: dimgray;
 }
 
-
 /* 
   ##Device = Laptops, Desktops
   ##Screen = B/w 1025px to 1280px
@@ -263,7 +285,7 @@ export default {
 
 @media (min-width: 768px) and (max-width: 1024px) {
   #main {
-    gap:1em;
+    gap: 1em;
     grid-template-columns: 1fr repeat(4, minmax(150px, 200px)) 1fr;
     grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr 1fr;
     grid-template-areas:

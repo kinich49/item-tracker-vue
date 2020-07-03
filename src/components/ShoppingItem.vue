@@ -42,7 +42,6 @@
         />
         <v-text-field label="Quantity" v-model.number="quantity" class="quantity-input" />
         <v-select class="quantity-unit-input" v-model="unit" :items="['KG','Unit']" label="Unit"></v-select>
-
       </div>
     </v-expand-transition>
 
@@ -93,7 +92,7 @@ export default {
       return this.formatter.format(this.unitPrice * this.quantity);
     },
     items() {
-      if (this.itemEntries === null || this.itemEntries.length === 0) return [];
+      if (!this.itemEntries || this.itemEntries.length == 0) return [];
 
       return this.itemEntries.map(itemEntry => {
         return {
@@ -103,8 +102,7 @@ export default {
       });
     },
     categoryItems() {
-      if (this.categoryEntries === null || this.categoryEntries.length === 0)
-        return [];
+      if (!this.categoryEntries || this.categoryEntries.length == 0) return [];
 
       return this.categoryEntries.map(categoryEntry => {
         return {
@@ -114,8 +112,7 @@ export default {
       });
     },
     brandItems() {
-      if (this.brandEntries === null || this.brandEntries.length === 0)
-        return [];
+      if (!this.brandEntries || this.brandEntries.length == 0) return [];
 
       return this.brandEntries.map(brandEntry => {
         return {
@@ -127,67 +124,65 @@ export default {
     item() {
       if (_.isNil(this.itemSelection)) return null;
 
-      console.log("computed item");
-      console.log(this.itemSelection);
       let itemId = null;
       let itemName = null;
       let brand = null;
       let category = null;
+      let isNew = false;
+
       if (_.isString(this.itemSelection)) {
         itemName = this.itemSelection;
+        isNew = true;
       } else if (!_.isNil(this.itemSelection.value)) {
         itemId = this.itemSelection.value.id;
         itemName = this.itemSelection.value.name;
         brand = this.itemSelection.value.brand;
         category = this.itemSelection.value.category;
       }
+
       let item = {
         id: itemId,
+        isNew: isNew,
         name: itemName,
+        unit: this.unit,
         brand: brand,
         category: category,
-        unit: this.unit,
-        unitPrice: this.unitPrice,
-        quantity: this.quantity,
         currency: "MXN"
       };
-
-      this.$emit("update:item", item);
       return item;
     },
     category() {
-      if (
-        this.categorySelection === undefined ||
-        this.categorySelection === null
-      )
-        return null;
+      if (!this.categorySelection) return null;
 
+      let category;
       if (_.isString(this.categorySelection)) {
-        return {
+        category = {
           id: null,
           name: this.categorySelection
         };
       } else {
-        return this.categorySelection.value;
+        category = this.categorySelection.value;
       }
+      return category;
     },
     brand() {
-      if (this.brandSelection === undefined || this.brandSelection === null)
-        return null;
+      if (!this.brandSelection) return null;
 
+      let brand;
       if (_.isString(this.brandSelection)) {
-        return {
+        brand = {
           id: null,
           name: this.brandSelection
         };
       } else {
-        return this.brandSelection.value;
+        brand = this.brandSelection.value;
       }
+      return brand;
     }
   },
   watch: {
     itemSearch(text) {
-      if (text === "" || text === undefined) {
+      if (!text || !text.trim()) {
         return;
       }
       let url = `${baseUrl}/items?name=${text}`;
@@ -201,7 +196,7 @@ export default {
         .catch(error => console.log(error));
     },
     categorySearch(text) {
-      if (text === "" || text === undefined) {
+      if (!text || !text.trim()) {
         return;
       }
       let url = `${baseUrl}/categories?name=${text}`;
@@ -215,7 +210,7 @@ export default {
         .catch(error => console.log(error));
     },
     brandSearch(text) {
-      if (text === "" || text === undefined) {
+      if (!text || !text.trim()) {
         return;
       }
       let url = `${baseUrl}/brands?name=${text}`;
@@ -229,11 +224,11 @@ export default {
         .catch(error => console.log(error));
     },
     item() {
-      console.log("watch item");
-      console.log(this.item);
       if (_.isNil(this.item)) {
         this.brandSelection = null;
         this.categorySelection = null;
+        this.$emit("update:itemname", null);
+        this.$emit("update:itemid", null);
         return;
       }
 
@@ -250,6 +245,20 @@ export default {
           value: this.item.category
         };
       }
+      this.$emit("update:itemname", this.item.name);
+      this.$emit("update:itemid", this.item.id);
+    },
+    unitPrice() {
+      this.$emit("update:unitprice", this.unitPrice);
+    },
+    quantity() {
+      this.$emit("update:quantity", this.quantity);
+    },
+    category() {
+      this.$emit("update:category", this.category);
+    },
+    brand() {
+      this.$emit("update:brand", this.brand);
     }
   }
 };
