@@ -259,6 +259,9 @@ export default {
     },
     brand() {
       this.$emit("update:brand", this.brand);
+    },
+    unit() {
+      this.$emit("update:unit", this.unit);
     }
   }
 };

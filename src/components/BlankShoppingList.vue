@@ -28,6 +28,7 @@
           v-bind:quantity.sync="shoppingItem.item.quantity"
           v-bind:brand.sync="shoppingItem.item.brand"
           v-bind:category.sync="shoppingItem.item.category"
+          v-bind:unit.sync="shoppingItem.item.unit"
         />
         <!-- <ShoppingItem v-for="shoppingItem in shoppingItems" v-bind:key="shoppingItem.index" /> -->
       </div>
@@ -131,6 +132,7 @@ export default {
           quantity: null,
           brand: null,
           category: null,
+          unit: "Unit",
           currency: "MXN"
         }
       };
@@ -143,9 +145,7 @@ export default {
         return;
       }
 
-      let elements = [];
-
-      elements = this.shoppingItems.map(i => i.item);
+      let elements = this.shoppingItems.map(i => i.item);
 
       const shoppingList = {
         shoppingDate: this.shoppingDate,
