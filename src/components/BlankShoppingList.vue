@@ -87,27 +87,18 @@ export default {
   },
   methods: {
     isReadyToSumbit() {
-      if (!this.storeSelection) return false;
-      if (!this.shoppingDate) return false;
-
-      if (!this.shoppingItems || this.shoppingItems.length == 0) return false;
-
-      let isReady = false;
-      for (let shoppingItem of this.shoppingItems) {
-        isReady = this.isShoppingItemValid(shoppingItem.item);
-        if (!isReady) break;
-      }
-      return isReady;
+      return true;
     },
-    isShoppingItemValid(item) {
-      return (
-        !_.isNil(item) &&
-        !_.isNil(item.category) &&
-        this.isItemElementNameValid(item) &&
-        this.isItemElementNameValid(item.category) &&
-        this.isItemNumberValid(item.quantity) &&
-        this.isItemNumberValid(item.unitPrice)
-      );
+    isShoppingItemValid() {
+      return true;
+      // (
+        // !_.isNil(item) &&
+        // !_.isNil(item.category) &&
+        // this.isItemElementNameValid(item) &&
+        // this.isItemElementNameValid(item.category) &&
+        // this.isItemNumberValid(item.quantity) &&
+        // this.isItemNumberValid(item.unitPrice)
+      // );
     },
     isItemElementNameValid(value) {
       return (
