@@ -13,7 +13,13 @@
         clearable
       ></v-combobox>
       <input id="shopping-date-input" v-model="shoppingDate" type="date" />
-      <v-btn color="primary" tile id="submit-shopping-list" v-on:click="submitShoppingList()">Save</v-btn>
+      <v-btn
+        color="primary"
+        tile
+        id="submit-shopping-list"
+        v-on:click="submitShoppingList()"
+        >Save</v-btn
+      >
       <div id="empty-message-container" v-if="shoppingItems.length <= 0">
         <p id="empty-message">No items yet. Try adding something!</p>
       </div>
@@ -21,7 +27,7 @@
       <div v-else id="shopping-list">
         <ShoppingItem
           v-for="shoppingItem in shoppingItems"
-          v-bind:key="shoppingItem.index"
+          v-bind:key="shoppingItem.shoppingItemKey"
           v-bind:itemname.sync="shoppingItem.item.name"
           v-bind:itemid.sync="shoppingItem.item.id"
           v-bind:unitprice.sync="shoppingItem.item.unitPrice"
@@ -29,12 +35,18 @@
           v-bind:brand.sync="shoppingItem.item.brand"
           v-bind:category.sync="shoppingItem.item.category"
           v-bind:unit.sync="shoppingItem.item.unit"
+          v-bind:indexId="shoppingItem.index"
+          v-on:dismiss-item="removeItem(shoppingItem)"
         />
-        <!-- <ShoppingItem v-for="shoppingItem in shoppingItems" v-bind:key="shoppingItem.index" /> -->
       </div>
     </div>
     <div id="fab-container">
-      <v-btn fab id="shopping-add-item" color="primary" v-on:click="addBlankShoppingItem()">
+      <v-btn
+        fab
+        id="shopping-add-item"
+        color="primary"
+        v-on:click="addBlankShoppingItem()"
+      >
         <v-icon>mdi-plus</v-icon>
       </v-btn>
     </div>
@@ -56,7 +68,8 @@ export default {
       shoppingItems: [],
       storeSearch: null,
       storeSelection: null,
-      storeEntries: null
+      storeEntries: null,
+      maxShoppingItemKey: 0,
     };
   },
   computed: {
@@ -64,10 +77,10 @@ export default {
       if (_.isNil(this.storeEntries) || this.storeEntries.length == 0)
         return [];
 
-      return this.storeEntries.map(storeEntry => {
+      return this.storeEntries.map((storeEntry) => {
         return {
           text: storeEntry.name,
-          value: storeEntry
+          value: storeEntry,
         };
       });
     },
@@ -78,26 +91,33 @@ export default {
       if (_.isString(this.storeSelection)) {
         return {
           id: null,
-          name: this.storeSelection
+          name: this.storeSelection,
         };
       } else {
         return this.storeSelection.value;
       }
-    }
+    },
   },
   methods: {
+    removeItem(shoppingItem) {
+      console.log(`key to remove ${shoppingItem.shoppingItemKey}`);
+      var index = this.shoppingItems.indexOf(shoppingItem);
+      if (index > -1) {
+        this.shoppingItems.splice(index, 1);
+      }
+    },
     isReadyToSumbit() {
       return true;
     },
     isShoppingItemValid() {
       return true;
       // (
-        // !_.isNil(item) &&
-        // !_.isNil(item.category) &&
-        // this.isItemElementNameValid(item) &&
-        // this.isItemElementNameValid(item.category) &&
-        // this.isItemNumberValid(item.quantity) &&
-        // this.isItemNumberValid(item.unitPrice)
+      // !_.isNil(item) &&
+      // !_.isNil(item.category) &&
+      // this.isItemElementNameValid(item) &&
+      // this.isItemElementNameValid(item.category) &&
+      // this.isItemNumberValid(item.quantity) &&
+      // this.isItemNumberValid(item.unitPrice)
       // );
     },
     isItemElementNameValid(value) {
@@ -113,9 +133,8 @@ export default {
     },
 
     addBlankShoppingItem() {
-      let index = this.shoppingItems.length + 1;
       let shoppingItem = {
-        index: index,
+        shoppingItemKey: this.maxShoppingItemKey,
         item: {
           name: null,
           id: null,
@@ -124,10 +143,11 @@ export default {
           brand: null,
           category: null,
           unit: "Unit",
-          currency: "MXN"
-        }
+          currency: "MXN",
+        },
       };
       this.shoppingItems.push(shoppingItem);
+      this.maxShoppingItemKey += 1;
     },
     submitShoppingList() {
       console.log(this.isReadyToSumbit());
@@ -136,23 +156,23 @@ export default {
         return;
       }
 
-      let elements = this.shoppingItems.map(i => i.item);
+      let elements = this.shoppingItems.map((i) => i.item);
 
       const shoppingList = {
         shoppingDate: this.shoppingDate,
         store: this.store,
-        shoppingItems: elements
+        shoppingItems: elements,
       };
       const url = `${baseUrl}/shoppingLists`;
       axios
         .post(url, shoppingList, {
-          auth: defaultAuth
+          auth: defaultAuth,
         })
         .then(() => {
           this.$router.push("/");
         })
-        .catch(error => console.log(error));
-    }
+        .catch((error) => console.log(error));
+    },
   },
   watch: {
     storeSearch(text) {
@@ -162,17 +182,17 @@ export default {
       let url = `${baseUrl}/stores?name=${text}`;
       axios
         .get(url, {
-          auth: defaultAuth
+          auth: defaultAuth,
         })
-        .then(result => {
+        .then((result) => {
           this.storeEntries = result.data.data;
         })
-        .catch(error => console.log(error));
-    }
+        .catch((error) => console.log(error));
+    },
   },
   components: {
-    ShoppingItem
-  }
+    ShoppingItem,
+  },
 };
 </script>
 

@@ -1,5 +1,13 @@
 <template>
   <v-card class="main-item-container">
+    <button
+      type="button"
+      class="remove-item"
+      aria-label="Close"
+      @click="$emit('dismiss-item')"
+    >
+      <span aria-hidden="true">×</span>
+    </button>
     <v-combobox
       v-model="itemSelection"
       class="item-input"
@@ -40,8 +48,17 @@
           label="Unit Price"
           placeholder="What's the price?"
         />
-        <v-text-field label="Quantity" v-model.number="quantity" class="quantity-input" />
-        <v-select class="quantity-unit-input" v-model="unit" :items="['KG','Unit']" label="Unit"></v-select>
+        <v-text-field
+          label="Quantity"
+          v-model.number="quantity"
+          class="quantity-input"
+        />
+        <v-select
+          class="quantity-unit-input"
+          v-model="unit"
+          :items="['KG', 'Unit']"
+          label="Unit"
+        ></v-select>
       </div>
     </v-expand-transition>
 
@@ -49,7 +66,7 @@
     <input readonly disabled :value="totalPrice" id="total-price-input" />
     <v-card-actions id="actions">
       <v-btn icon @click="expand = !expand">
-        <v-icon>{{ expand ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+        <v-icon>{{ expand ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
       </v-btn>
     </v-card-actions>
   </v-card>
@@ -80,9 +97,12 @@ export default {
       formatter: new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
-        minimumFractionDigits: 2
-      })
+        minimumFractionDigits: 2,
+      }),
     };
+  },
+  props: {
+    indexId: Number,
   },
   computed: {
     totalPrice() {
@@ -94,30 +114,30 @@ export default {
     items() {
       if (!this.itemEntries || this.itemEntries.length == 0) return [];
 
-      return this.itemEntries.map(itemEntry => {
+      return this.itemEntries.map((itemEntry) => {
         return {
           text: itemEntry.name,
-          value: itemEntry
+          value: itemEntry,
         };
       });
     },
     categoryItems() {
       if (!this.categoryEntries || this.categoryEntries.length == 0) return [];
 
-      return this.categoryEntries.map(categoryEntry => {
+      return this.categoryEntries.map((categoryEntry) => {
         return {
           text: categoryEntry.name,
-          value: categoryEntry
+          value: categoryEntry,
         };
       });
     },
     brandItems() {
       if (!this.brandEntries || this.brandEntries.length == 0) return [];
 
-      return this.brandEntries.map(brandEntry => {
+      return this.brandEntries.map((brandEntry) => {
         return {
           text: brandEntry.name,
-          value: brandEntry
+          value: brandEntry,
         };
       });
     },
@@ -147,7 +167,7 @@ export default {
         unit: this.unit,
         brand: brand,
         category: category,
-        currency: "MXN"
+        currency: "MXN",
       };
       return item;
     },
@@ -158,7 +178,7 @@ export default {
       if (_.isString(this.categorySelection)) {
         category = {
           id: null,
-          name: this.categorySelection
+          name: this.categorySelection,
         };
       } else {
         category = this.categorySelection.value;
@@ -172,13 +192,13 @@ export default {
       if (_.isString(this.brandSelection)) {
         brand = {
           id: null,
-          name: this.brandSelection
+          name: this.brandSelection,
         };
       } else {
         brand = this.brandSelection.value;
       }
       return brand;
-    }
+    },
   },
   watch: {
     itemSearch(text) {
@@ -188,12 +208,12 @@ export default {
       let url = `${baseUrl}/items?name=${text}`;
       axios
         .get(url, {
-          auth: defaultAuth
+          auth: defaultAuth,
         })
-        .then(result => {
+        .then((result) => {
           this.itemEntries = result.data.data;
         })
-        .catch(error => console.log(error));
+        .catch((error) => console.log(error));
     },
     categorySearch(text) {
       if (!text || !text.trim()) {
@@ -202,12 +222,12 @@ export default {
       let url = `${baseUrl}/categories?name=${text}`;
       axios
         .get(url, {
-          auth: defaultAuth
+          auth: defaultAuth,
         })
-        .then(result => {
+        .then((result) => {
           this.categoryEntries = result.data.data;
         })
-        .catch(error => console.log(error));
+        .catch((error) => console.log(error));
     },
     brandSearch(text) {
       if (!text || !text.trim()) {
@@ -216,12 +236,12 @@ export default {
       let url = `${baseUrl}/brands?name=${text}`;
       axios
         .get(url, {
-          auth: defaultAuth
+          auth: defaultAuth,
         })
-        .then(result => {
+        .then((result) => {
           this.brandEntries = result.data.data;
         })
-        .catch(error => console.log(error));
+        .catch((error) => console.log(error));
     },
     item() {
       if (_.isNil(this.item)) {
@@ -235,14 +255,14 @@ export default {
       if (!_.isNil(this.item.brand)) {
         this.brandSelection = {
           text: this.item.brand.name,
-          value: this.item.brand
+          value: this.item.brand,
         };
       }
 
       if (!_.isNil(this.item.category)) {
         this.categorySelection = {
           text: this.item.category.name,
-          value: this.item.category
+          value: this.item.category,
         };
       }
       this.$emit("update:itemname", this.item.name);
@@ -262,8 +282,8 @@ export default {
     },
     unit() {
       this.$emit("update:unit", this.unit);
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -317,6 +337,10 @@ export default {
   justify-self: end;
 }
 
+.remove-item {
+  grid-area: remove-item;
+}
+
 /* 
   ##Device = Laptops, Desktops
   ##Screen = B/w 1025px to 1280px
@@ -330,7 +354,7 @@ export default {
     padding: 1em;
     grid-template-columns: repeat(8, minmax(50px, 1fr));
     grid-template-areas:
-      "item-input item-input item-input item-input item-input item-input . ."
+      "item-input item-input item-input item-input item-input item-input . remove-item"
       "item-details item-details item-details item-details item-details item-details item-details item-details"
       "total-price-label total-price-input total-price-input . . . . ."
       ". . . . . . . chevron";
