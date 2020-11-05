@@ -213,7 +213,7 @@ export default {
         .then((result) => {
           this.itemEntries = result.data.data;
         })
-        .catch((error) => console.log(error));
+        .catch(() => {});
     },
     categorySearch(text) {
       if (!text || !text.trim()) {
@@ -227,7 +227,7 @@ export default {
         .then((result) => {
           this.categoryEntries = result.data.data;
         })
-        .catch((error) => console.log(error));
+        .catch(() => {});
     },
     brandSearch(text) {
       if (!text || !text.trim()) {
@@ -241,7 +241,7 @@ export default {
         .then((result) => {
           this.brandEntries = result.data.data;
         })
-        .catch((error) => console.log(error));
+        .catch(() => {});
     },
     item() {
       if (_.isNil(this.item)) {
