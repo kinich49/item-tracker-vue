@@ -100,7 +100,6 @@ export default {
   },
   methods: {
     removeItem(shoppingItem) {
-      console.log(`key to remove ${shoppingItem.shoppingItemKey}`);
       var index = this.shoppingItems.indexOf(shoppingItem);
       if (index > -1) {
         this.shoppingItems.splice(index, 1);
@@ -150,9 +149,7 @@ export default {
       this.maxShoppingItemKey += 1;
     },
     submitShoppingList() {
-      console.log(this.isReadyToSumbit());
       if (!this.isReadyToSumbit()) {
-        console.log("Something went wrong");
         return;
       }
 
@@ -171,7 +168,7 @@ export default {
         .then(() => {
           this.$router.push("/");
         })
-        .catch((error) => console.log(error));
+        .catch(() => {});
     },
   },
   watch: {
@@ -187,7 +184,7 @@ export default {
         .then((result) => {
           this.storeEntries = result.data.data;
         })
-        .catch((error) => console.log(error));
+        .catch(() => {});
     },
   },
   components: {

@@ -114,7 +114,7 @@ export default {
         .then(response => {
           if (response.data.data) this.entries = response.data.data;
         })
-        .catch(error => console.log(error));
+        .catch(() => {});
     },
     selection(selection) {
       let url = this.getAnalyticsUrl(selection);
