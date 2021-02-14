@@ -23,7 +23,6 @@ const routes = [
     path: '/analytics',
     component: AnalyticsSearch
   }
-
 ]
 
 const router = new VueRouter({
@@ -32,7 +31,7 @@ const router = new VueRouter({
 
 Vue.config.productionTip = false
 
-let vm = new Vue({
+const vm = new Vue({
   render: h => h(App),
   vuetify,
   router

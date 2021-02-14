@@ -1,5 +1,13 @@
 <template>
   <v-card class="main-item-container">
+    <button
+      type="button"
+      class="remove-item"
+      aria-label="Close"
+      @click="$emit('dismiss-item')"
+    >
+      <span aria-hidden="true">×</span>
+    </button>
     <v-combobox
       v-model="itemSelection"
       class="item-input"
@@ -34,15 +42,23 @@
           hide-no-data
           clearable
         />
-
-        <v-text-field label="Quantity" v-model.number="quantity" class="quantity-input" />
-        <v-select class="quantity-unit-input" v-model="unit" :items="['KG','Unit']" label="Unit"></v-select>
         <v-text-field
           class="unit-price-input"
           v-model.number="unitPrice"
           label="Unit Price"
           placeholder="What's the price?"
         />
+        <v-text-field
+          label="Quantity"
+          v-model.number="quantity"
+          class="quantity-input"
+        />
+        <v-select
+          class="quantity-unit-input"
+          v-model="unit"
+          :items="['KG', 'Unit']"
+          label="Unit"
+        ></v-select>
       </div>
     </v-expand-transition>
 
@@ -50,7 +66,7 @@
     <input readonly disabled :value="totalPrice" id="total-price-input" />
     <v-card-actions id="actions">
       <v-btn icon @click="expand = !expand">
-        <v-icon>{{ expand ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+        <v-icon>{{ expand ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
       </v-btn>
     </v-card-actions>
   </v-card>
@@ -58,7 +74,7 @@
 
 <script>
 import axios from "axios";
-import { baseUrl } from "../constants";
+import defaultAuth, { baseUrl } from "../constants";
 import _ from "lodash-es";
 
 export default {
@@ -81,9 +97,12 @@ export default {
       formatter: new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
-        minimumFractionDigits: 2
-      })
+        minimumFractionDigits: 2,
+      }),
     };
+  },
+  props: {
+    indexId: Number,
   },
   computed: {
     totalPrice() {
@@ -93,159 +112,178 @@ export default {
       return this.formatter.format(this.unitPrice * this.quantity);
     },
     items() {
-      if (this.itemEntries === null || this.itemEntries.length === 0) return [];
+      if (!this.itemEntries || this.itemEntries.length == 0) return [];
 
-      return this.itemEntries.map(itemEntry => {
+      return this.itemEntries.map((itemEntry) => {
         return {
           text: itemEntry.name,
-          value: itemEntry
+          value: itemEntry,
         };
       });
     },
     categoryItems() {
-      if (this.categoryEntries === null || this.categoryEntries.length === 0)
-        return [];
+      if (!this.categoryEntries || this.categoryEntries.length == 0) return [];
 
-      return this.categoryEntries.map(categoryEntry => {
+      return this.categoryEntries.map((categoryEntry) => {
         return {
           text: categoryEntry.name,
-          value: categoryEntry
+          value: categoryEntry,
         };
       });
     },
     brandItems() {
-      if (this.brandEntries === null || this.brandEntries.length === 0)
-        return [];
+      if (!this.brandEntries || this.brandEntries.length == 0) return [];
 
-      return this.brandEntries.map(brandEntry => {
+      return this.brandEntries.map((brandEntry) => {
         return {
           text: brandEntry.name,
-          value: brandEntry
+          value: brandEntry,
         };
       });
     },
     item() {
       if (_.isNil(this.itemSelection)) return null;
 
-      console.log("computed item");
-      console.log(this.itemSelection);
       let itemId = null;
       let itemName = null;
       let brand = null;
       let category = null;
+      let isNew = false;
+
       if (_.isString(this.itemSelection)) {
         itemName = this.itemSelection;
+        isNew = true;
       } else if (!_.isNil(this.itemSelection.value)) {
         itemId = this.itemSelection.value.id;
         itemName = this.itemSelection.value.name;
         brand = this.itemSelection.value.brand;
         category = this.itemSelection.value.category;
       }
+
       let item = {
         id: itemId,
+        isNew: isNew,
         name: itemName,
+        unit: this.unit,
         brand: brand,
         category: category,
-        unit: this.unit,
-        unitPrice: this.unitPrice,
-        quantity: this.quantity,
-        currency: "MXN"
+        currency: "MXN",
       };
-
-      this.$emit("update:item", item);
       return item;
     },
     category() {
-      if (
-        this.categorySelection === undefined ||
-        this.categorySelection === null
-      )
-        return null;
+      if (!this.categorySelection) return null;
 
+      let category;
       if (_.isString(this.categorySelection)) {
-        return {
+        category = {
           id: null,
-          name: this.categorySelection
+          name: this.categorySelection,
         };
       } else {
-        return this.categorySelection.value;
+        category = this.categorySelection.value;
       }
+      return category;
     },
     brand() {
-      if (this.brandSelection === undefined || this.brandSelection === null)
-        return null;
+      if (!this.brandSelection) return null;
 
+      let brand;
       if (_.isString(this.brandSelection)) {
-        return {
+        brand = {
           id: null,
-          name: this.brandSelection
+          name: this.brandSelection,
         };
       } else {
-        return this.brandSelection.value;
+        brand = this.brandSelection.value;
       }
-    }
+      return brand;
+    },
   },
   watch: {
     itemSearch(text) {
-      if (text === "" || text === undefined) {
+      if (!text || !text.trim()) {
         return;
       }
       let url = `${baseUrl}/items?name=${text}`;
       axios
-        .get(url)
-        .then(result => {
-          this.itemEntries = result.data;
+        .get(url, {
+          auth: defaultAuth,
         })
-        .catch(error => console.log(error));
+        .then((result) => {
+          this.itemEntries = result.data.data;
+        })
+        .catch(() => {});
     },
     categorySearch(text) {
-      if (text === "" || text === undefined) {
+      if (!text || !text.trim()) {
         return;
       }
       let url = `${baseUrl}/categories?name=${text}`;
       axios
-        .get(url)
-        .then(result => {
-          this.categoryEntries = result.data;
+        .get(url, {
+          auth: defaultAuth,
         })
-        .catch(error => console.log(error));
+        .then((result) => {
+          this.categoryEntries = result.data.data;
+        })
+        .catch(() => {});
     },
     brandSearch(text) {
-      if (text === "" || text === undefined) {
+      if (!text || !text.trim()) {
         return;
       }
       let url = `${baseUrl}/brands?name=${text}`;
       axios
-        .get(url)
-        .then(result => {
-          this.brandEntries = result.data;
+        .get(url, {
+          auth: defaultAuth,
         })
-        .catch(error => console.log(error));
+        .then((result) => {
+          this.brandEntries = result.data.data;
+        })
+        .catch(() => {});
     },
     item() {
-      console.log("watch item");
-      console.log(this.item);
       if (_.isNil(this.item)) {
         this.brandSelection = null;
         this.categorySelection = null;
+        this.$emit("update:itemname", null);
+        this.$emit("update:itemid", null);
         return;
       }
 
       if (!_.isNil(this.item.brand)) {
         this.brandSelection = {
           text: this.item.brand.name,
-          value: this.item.brand
+          value: this.item.brand,
         };
       }
 
       if (!_.isNil(this.item.category)) {
         this.categorySelection = {
           text: this.item.category.name,
-          value: this.item.category
+          value: this.item.category,
         };
       }
-    }
-  }
+      this.$emit("update:itemname", this.item.name);
+      this.$emit("update:itemid", this.item.id);
+    },
+    unitPrice() {
+      this.$emit("update:unitprice", this.unitPrice);
+    },
+    quantity() {
+      this.$emit("update:quantity", this.quantity);
+    },
+    category() {
+      this.$emit("update:category", this.category);
+    },
+    brand() {
+      this.$emit("update:brand", this.brand);
+    },
+    unit() {
+      this.$emit("update:unit", this.unit);
+    },
+  },
 };
 </script>
 
@@ -299,6 +337,10 @@ export default {
   justify-self: end;
 }
 
+.remove-item {
+  grid-area: remove-item;
+}
+
 /* 
   ##Device = Laptops, Desktops
   ##Screen = B/w 1025px to 1280px
@@ -312,7 +354,7 @@ export default {
     padding: 1em;
     grid-template-columns: repeat(8, minmax(50px, 1fr));
     grid-template-areas:
-      "item-input item-input item-input item-input item-input item-input . ."
+      "item-input item-input item-input item-input item-input item-input . remove-item"
       "item-details item-details item-details item-details item-details item-details item-details item-details"
       "total-price-label total-price-input total-price-input . . . . ."
       ". . . . . . . chevron";
@@ -387,7 +429,7 @@ export default {
       " category-input category-input category-input"
       " quantity-input quantity-unit-input ."
       " unit-price-input unit-price-input .";
-      gap: 1em;
+    gap: 1em;
   }
 }
 </style>

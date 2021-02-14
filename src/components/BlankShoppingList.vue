@@ -2,8 +2,6 @@
   <div>
     <div id="main">
       <h1 id="shopping-label">Shopping Receipt</h1>
-      <label id="shopping-date-label">Shoping Date</label>
-      <input id="shopping-date-input" v-model="shoppingDate" type="date" />
       <v-combobox
         class="shopping-store-input"
         v-model="storeSelection"
@@ -14,7 +12,14 @@
         hide-no-data
         clearable
       ></v-combobox>
-
+      <input id="shopping-date-input" v-model="shoppingDate" type="date" />
+      <v-btn
+        color="primary"
+        tile
+        id="submit-shopping-list"
+        v-on:click="submitShoppingList()"
+        >Save</v-btn
+      >
       <div id="empty-message-container" v-if="shoppingItems.length <= 0">
         <p id="empty-message">No items yet. Try adding something!</p>
       </div>
@@ -22,21 +27,26 @@
       <div v-else id="shopping-list">
         <ShoppingItem
           v-for="shoppingItem in shoppingItems"
-          v-bind:key="shoppingItem.index"
-          v-bind:item.sync="shoppingItem.item"
+          v-bind:key="shoppingItem.shoppingItemKey"
+          v-bind:itemname.sync="shoppingItem.item.name"
+          v-bind:itemid.sync="shoppingItem.item.id"
+          v-bind:unitprice.sync="shoppingItem.item.unitPrice"
+          v-bind:quantity.sync="shoppingItem.item.quantity"
+          v-bind:brand.sync="shoppingItem.item.brand"
+          v-bind:category.sync="shoppingItem.item.category"
+          v-bind:unit.sync="shoppingItem.item.unit"
+          v-bind:indexId="shoppingItem.index"
+          v-on:dismiss-item="removeItem(shoppingItem)"
         />
       </div>
-
-      <v-btn
-        color="secondary"
-        tile
-        id="submit-shopping-list"
-        v-on:click="submitShoppingList()"
-        :disabled="!isReadyToSumbit"
-      >Save</v-btn>
     </div>
     <div id="fab-container">
-      <v-btn fab id="shopping-add-item" color="primary" v-on:click="addBlankShoppingItem()">
+      <v-btn
+        fab
+        id="shopping-add-item"
+        color="primary"
+        v-on:click="addBlankShoppingItem()"
+      >
         <v-icon>mdi-plus</v-icon>
       </v-btn>
     </div>
@@ -46,42 +56,31 @@
 <script>
 import ShoppingItem from "./ShoppingItem.vue";
 import axios from "axios";
-import { baseUrl } from "../constants";
-import { mixin } from "../mixins/common";
+import defaultAuth, { baseUrl } from "../constants";
 import _ from "lodash-es";
 
 export default {
   name: "BlankShoppingList",
-  mixins: [mixin],
   data() {
     return {
       shoppingDate: null,
+      testBrand: null,
       shoppingItems: [],
       storeSearch: null,
       storeSelection: null,
-      storeEntries: null
+      storeEntries: null,
+      maxShoppingItemKey: 0,
     };
   },
   computed: {
-    isReadyToSumbit() {
-      if (!this.storeSelection) return false;
-      if (!this.shoppingDate) return false;
-
-      let isValid = false;
-      for (let item of this.shoppingItems) {
-        isValid = this.validateShoppingItem(item.item);
-        if (!isValid) break;
-      }
-      return isValid;
-    },
     items() {
-      if (this.storeEntries === null || this.storeEntries.length === 0)
+      if (_.isNil(this.storeEntries) || this.storeEntries.length == 0)
         return [];
 
-      return this.storeEntries.map(storeEntry => {
+      return this.storeEntries.map((storeEntry) => {
         return {
           text: storeEntry.name,
-          value: storeEntry
+          value: storeEntry,
         };
       });
     },
@@ -92,53 +91,85 @@ export default {
       if (_.isString(this.storeSelection)) {
         return {
           id: null,
-          name: this.storeSelection
+          name: this.storeSelection,
         };
       } else {
         return this.storeSelection.value;
       }
-    }
+    },
   },
   methods: {
+    removeItem(shoppingItem) {
+      var index = this.shoppingItems.indexOf(shoppingItem);
+      if (index > -1) {
+        this.shoppingItems.splice(index, 1);
+      }
+    },
+    isReadyToSumbit() {
+      return true;
+    },
+    isShoppingItemValid() {
+      return true;
+      // (
+      // !_.isNil(item) &&
+      // !_.isNil(item.category) &&
+      // this.isItemElementNameValid(item) &&
+      // this.isItemElementNameValid(item.category) &&
+      // this.isItemNumberValid(item.quantity) &&
+      // this.isItemNumberValid(item.unitPrice)
+      // );
+    },
+    isItemElementNameValid(value) {
+      return (
+        !_.isNil(value) && !_.isNil(value.name) && !_.isNil(value.name.trim())
+      );
+    },
+    isItemStringValid(value) {
+      return !_.isNil(value) && !_.isNil(value.trim());
+    },
+    isItemNumberValid(value) {
+      return !_.isNil(value) && value > 0;
+    },
+
     addBlankShoppingItem() {
-      let index = this.shoppingItems.length + 1;
       let shoppingItem = {
-        index: index,
-        item: null
+        shoppingItemKey: this.maxShoppingItemKey,
+        item: {
+          name: null,
+          id: null,
+          unitPrice: null,
+          quantity: null,
+          brand: null,
+          category: null,
+          unit: "Unit",
+          currency: "MXN",
+        },
       };
       this.shoppingItems.push(shoppingItem);
+      this.maxShoppingItemKey += 1;
     },
     submitShoppingList() {
-      let elements = [];
-      if (this.shoppingItems && this.shoppingItems.length > 0) {
-        elements = this.shoppingItems
-          .map(i => i.item)
-          .map(i => {
-            return {
-              itemId: i.id,
-              name: i.name,
-              category: i.category,
-              brand: i.brand,
-              quantity: i.quantity,
-              unitPrice: i.unitPrice,
-              unit: i.unit,
-              currency: i.currency
-            };
-          });
+      if (!this.isReadyToSumbit()) {
+        return;
       }
+
+      let elements = this.shoppingItems.map((i) => i.item);
+
       const shoppingList = {
         shoppingDate: this.shoppingDate,
         store: this.store,
-        shoppingItems: elements
+        shoppingItems: elements,
       };
       const url = `${baseUrl}/shoppingLists`;
       axios
-        .post(url, shoppingList)
+        .post(url, shoppingList, {
+          auth: defaultAuth,
+        })
         .then(() => {
           this.$router.push("/");
         })
-        .catch(error => console.log(error));
-    }
+        .catch(() => {});
+    },
   },
   watch: {
     storeSearch(text) {
@@ -147,16 +178,18 @@ export default {
       }
       let url = `${baseUrl}/stores?name=${text}`;
       axios
-        .get(url)
-        .then(result => {
-          this.storeEntries = result.data;
+        .get(url, {
+          auth: defaultAuth,
         })
-        .catch(error => console.log(error));
-    }
+        .then((result) => {
+          this.storeEntries = result.data.data;
+        })
+        .catch(() => {});
+    },
   },
   components: {
-    ShoppingItem
-  }
+    ShoppingItem,
+  },
 };
 </script>
 
@@ -185,13 +218,6 @@ export default {
 
 .shopping-store-input {
   grid-area: store-input;
-}
-
-#shopping-date-label {
-  grid-area: date-label;
-  padding-right: 0.5em;
-  justify-self: end;
-  text-align: right;
 }
 
 #shopping-date-input {
@@ -242,20 +268,21 @@ export default {
 */
 @media (min-width: 1025px) and (max-width: 1280px), (min-width: 1281px) {
   #main {
-    grid-template-columns: repeat(8, 1fr);
+    gap: 1em;
+    grid-template-columns: 1fr repeat(4, 200px) 1fr;
     grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr 1fr;
     grid-template-areas:
-      ". . . shopping-label shopping-label . . ."
-      ". . .  store-input store-input . . ."
-      ". . date-label date-label date-input . . . "
-      ". . . . submit-list  . . ."
-      ". . . shopping-list shopping-list . . .";
+      " . . shopping-label shopping-label .  ."
+      " .  . store-input store-input  . . "
+      " .  . date-input  . . . "
+      " . . . submit-list . . "
+      " . shopping-list shopping-list shopping-list shopping-list . ";
   }
 
   #fab-container {
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: 1fr repeat(4, 200px) 1fr;
     grid-template-rows: 1fr;
-    grid-template-areas: ". . . . . add-item . .";
+    grid-template-areas: ". . . . add-item . ";
   }
 }
 
@@ -266,20 +293,21 @@ export default {
 
 @media (min-width: 768px) and (max-width: 1024px) {
   #main {
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr;
+    gap: 1em;
+    grid-template-columns: 1fr repeat(4, minmax(150px, 200px)) 1fr;
+    grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr 1fr;
     grid-template-areas:
-      ". shopping-label shopping-label ."
-      ". store-input store-input ."
-      "date-label date-label date-input date-input"
-      ". . . submit-list"
-      "shopping-list shopping-list shopping-list shopping-list";
+      " . . shopping-label shopping-label .  ."
+      " .  . store-input store-input  . . "
+      " .  . date-input  . . . "
+      " . . . . submit-list . "
+      " . shopping-list shopping-list shopping-list shopping-list . ";
   }
 
   #fab-container {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr repeat(4, 200px) 1fr;
     grid-template-rows: 1fr;
-    grid-template-areas: ". . . add-item";
+    grid-template-areas: ". . . . add-item . ";
   }
 }
 /* 
@@ -294,14 +322,14 @@ export default {
 @media (min-width: 320px) and (max-width: 480px),
   (min-width: 481px) and (max-width: 767px) {
   #main {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr;
     grid-template-rows: repeat(4, minmax(1fr, 75px)) 5fr;
     grid-template-areas:
-      ". shopping-label shopping-label ."
-      ". store-input store-input ."
-      "date-label date-label date-input date-input"
-      "submit-list submit-list submit-list submit-list"
-      "shopping-list shopping-list shopping-list shopping-list";
+      "shopping-label"
+      "store-input "
+      "date-input"
+      "submit-list "
+      "shopping-list ";
   }
 
   #fab-container {

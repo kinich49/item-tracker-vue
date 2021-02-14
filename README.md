@@ -17,6 +17,20 @@ I hope you can forgive my lack of UX skills.
 npm install
 ```
 
+You also need to add three local files
+```
+.env.developent
+.env.local
+.env.production
+```
+
+And set these variables accordingly to what you defined in your back-end environment. These is an ongoing project in development, so that's why we hardcode some credentials (But we don't want to upload them to git remote)
+```
+VUE_APP_BASE_URL
+VUE_APP_DEFAULT_USERNAME
+VUE_APP_DEFAULT_PASSWORD
+```
+
 ### Compiles and hot-reloads for development
 ```
 npm run serve

@@ -1,5 +1,5 @@
 <template>
-  <v-card outlined id="card" max-width="300">
+  <v-card outlined id="card">
     <v-list-item three-line>
       <v-list-item-content>
         <div class="overline">{{ item.category.name }}</div>
@@ -51,6 +51,7 @@ export default {
   display: grid;
   grid-template-rows: repeat(auto-fit, 1fr);
   padding: 12px 24px;
+  width: 300px;
 }
 
 #first-label {

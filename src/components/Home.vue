@@ -78,44 +78,37 @@ export default {};
 
 <style scoped>
 #content {
-  padding: 24px;
+  display: grid;
+  padding-top: 12px;
+  gap: 24px;
+  grid-template-columns: 1fr minmax(320px, 2fr) 1fr;
+  grid-template-rows: 75px 1fr;
+  grid-template-areas:
+    ". title ."
+    ". content .";
 }
 
+h1 {
+  grid-area: title;
+  justify-self: center;
+}
+
+#main {
+  grid-area: content;
+}
 /* 
   ##Device = Desktops
   ##Screen = 1281px to higher resolution desktops
 */
-@media (min-width: 1281px) {
-  #content {
-    display: grid;
-    grid-template-columns: 0.5fr 1fr 0.5fr;
-    grid-template-rows: 75px 1fr;
-    grid-template-areas:
-      ". title ."
-      ". content .";
-  }
+/* @media (min-width: 1281px) {
 
-  h1 {
-    grid-area: title;
-    justify-self: center;
-  }
-
-  #main {
-    grid-area: content;
-  }
-}
+} */
 
 /* 
   ##Device = Most of the Smartphones Mobiles (Portrait)
   ##Screen = B/w 320px to 479px
 */
-@media (min-width: 320px) and (max-width: 480px) {
-  #content {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    align-items: center;
-    margin-bottom: 24px;
-  }
-}
+/* @media (min-width: 320px) and (max-width: 480px) {
+
+} */
 </style>
