@@ -35,7 +35,6 @@
           v-bind:brand.sync="shoppingItem.item.brand"
           v-bind:category.sync="shoppingItem.item.category"
           v-bind:unit.sync="shoppingItem.item.unit"
-          v-bind:indexId="shoppingItem.index"
           v-on:dismiss-item="removeItem(shoppingItem)"
         />
       </div>
@@ -135,10 +134,10 @@ export default {
       let shoppingItem = {
         shoppingItemKey: this.maxShoppingItemKey,
         item: {
-          name: null,
+          name: "",
           id: null,
-          unitPrice: null,
-          quantity: null,
+          unitPrice: 0,
+          quantity: 0,
           brand: null,
           category: null,
           unit: "Unit",
