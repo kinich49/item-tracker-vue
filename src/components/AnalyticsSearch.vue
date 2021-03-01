@@ -10,7 +10,7 @@
       placeholder="Search for an item, brand or category"
     ></v-autocomplete>
     <div id="search-results">
-      <ShoppingItemAnalytics
+      <ShoppingItemAnalyticsComponent
         v-for="analytic in analytics"
         v-bind:key="analytic.index"
         :analytics="analytic.analytics"
@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import ShoppingItemAnalytics from "./ShoppingItemAnalytics";
+import ShoppingItemAnalyticsComponent from "./ShoppingItemAnalytics";
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
 
@@ -130,11 +130,11 @@ export default {
             let nextIndex = this.currentIndex++;
             let newAnalytics = {
               index: nextIndex,
-              item: element.item,
               analytics: {
                 latestStoreAndDate: `${element.latestStore} on ${element.latestDate}`,
                 latestPrice: element.latestPrice,
-                averagePrice: element.averagePrice
+                averagePrice: element.averagePrice,
+                item: element.item
               }
             };
             this.analytics.push(newAnalytics);
@@ -144,7 +144,7 @@ export default {
     }
   },
   components: {
-    ShoppingItemAnalytics
+    ShoppingItemAnalyticsComponent
   }
 };
 </script>

@@ -2,15 +2,18 @@
   <v-card outlined id="card">
     <v-list-item three-line>
       <v-list-item-content>
-        <div class="overline">{{ item.category.name }}</div>
+        <div class="overline">{{ analytics.item.category.name }}</div>
         <v-list-item-title>
-          <strong>{{ item.name }}</strong>
+          <strong>{{ analytics.item.name }}</strong>
         </v-list-item-title>
-        <v-list-item-subtitle>{{ item.brand.name }}</v-list-item-subtitle>
+        <v-list-item-subtitle v-if="analytics.item.brand != null">{{
+          analytics.item.brand.name
+        }}</v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>
 
     <v-divider></v-divider>
+
     <label id="first-label">
       <strong>Last bought in:&nbsp;</strong>
       <span>{{ analytics.latestStoreAndDate }}</span>
@@ -28,22 +31,15 @@
   </v-card>
 </template>
 
-<script>
-export default {
-  name: "ShoppingItemAnalytics",
-  props: {
-    analytics: {
-      latestPrice: null,
-      latestStoreAndDate: null,
-      averagePrice: null
-    },
-    item: {
-      name: null,
-      category: null,
-      brand: null
-    }
-  }
-};
+<script lang="ts">
+import { Analytics } from "@/models/Analytics";
+import { Component, Prop, Vue } from "vue-property-decorator";
+
+@Component
+export default class ShoppingItemAnalyticsComponent extends Vue {
+  @Prop({ required: true, type: Object as () => Analytics })
+  analytics!: Analytics;
+}
 </script>
 
 <style scoped>
@@ -57,6 +53,4 @@ export default {
 #first-label {
   margin-top: 10px;
 }
-
-
 </style>
