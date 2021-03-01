@@ -1,7 +1,4 @@
-import Brand from "./Brand";
-import Category from "./Category";
-import Item from "./Item";
-import Store from "./Store";
+import {Item, Brand, Category, Store} from "./Requests"
 
 interface ComboBoxSelection<Type> {
     text: string;

@@ -56,15 +56,11 @@
 
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
-import _ from "lodash-es";
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { StoreSelection } from "@/models/responses/ComboBoxSelections"
-import Store from "@/models/responses/Store"
-import ShoppingItem from "@/models/responses/ShoppingItem";
-import ShoppingList from "@/models/responses/ShoppingList";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { StoreSelection } from "@/models/ComboBoxSelections"
 import ShoppingItemComponent from "./ShoppingItem.vue"
-import JsonApi from "@/models/responses/JsonApi";
-
+import { ShoppingItem, Store, ShoppingList } from "@/models/Requests"
+import JsonApi from "@/models/JsonApi"
 
 interface ShoppingItemWrapper {
   shoppingItemKey: number,
@@ -152,7 +148,6 @@ export default class BlankShoppingListComponent extends Vue {
       return;
     }
 
-    console.log(`storeSearch ${newValue}`)
     let url = `${baseUrl}/stores?name=${newValue}`;
 
     axios

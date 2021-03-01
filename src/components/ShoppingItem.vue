@@ -75,17 +75,14 @@
 <script lang="ts">
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
-import _ from "lodash-es";
 import { Component, Vue, Watch } from "vue-property-decorator";
-import Category from "@/models/responses/Category";
-import Item from "@/models/responses/Item";
-import Brand from "@/models/responses/Brand";
+import { Category, Item, Brand } from "@/models/Requests"
 import JsonApi from "@/models/responses/JsonApi";
 import {
   ItemSelection,
   CategorySelection,
   BrandSelection,
-} from "@/models/responses/ComboBoxSelections";
+} from "@/models/ComboBoxSelections";
 
 @Component
 export default class ShoppingItemComponent extends Vue {
