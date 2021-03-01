@@ -3,9 +3,10 @@ import Category from "./Category";
 import Model from "./Model";
 
 export default interface ShoppingItem extends Model {
-    quantity: string,
-    unitPrice: string,
-    totalPrice: string,
+    quantity: number,
+    unitPrice: number,
+    unit: string,
+    currency: string,
     category: Category,
     brand?: Brand
 }

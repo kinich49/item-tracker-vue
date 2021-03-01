@@ -76,23 +76,19 @@
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
 import _ from "lodash-es";
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 import Category from "@/models/responses/Category";
 import Item from "@/models/responses/Item";
 import Brand from "@/models/responses/Brand";
 import JsonApi from "@/models/responses/JsonApi";
-
-interface ComboBoxEntry<Type> {
-  text: string;
-  value: Type;
-}
-
-type ItemSelection = ComboBoxEntry<Item>;
-type BrandSelection = ComboBoxEntry<Brand>;
-type CategorySelection = ComboBoxEntry<Category>;
+import {
+  ItemSelection,
+  CategorySelection,
+  BrandSelection,
+} from "@/models/responses/ComboBoxSelections";
 
 @Component
-export default class ShoppingItem extends Vue {
+export default class ShoppingItemComponent extends Vue {
   expand: boolean = true;
 
   itemSearch: string = "";
@@ -121,7 +117,7 @@ export default class ShoppingItem extends Vue {
     return this.formatter.format(this.unitPrice * this.quantity);
   }
 
-  get items(): ComboBoxEntry<Item>[] {
+  get items(): ItemSelection[] {
     return this.itemEntries.map((itemEntry) => {
       return {
         text: itemEntry.name ?? "",
@@ -130,7 +126,7 @@ export default class ShoppingItem extends Vue {
     });
   }
 
-  get categoryItems(): ComboBoxEntry<Category>[] {
+  get categoryItems(): CategorySelection[] {
     return this.categoryEntries.map((categoryEntry) => {
       return {
         text: categoryEntry.name ?? "",
@@ -139,7 +135,7 @@ export default class ShoppingItem extends Vue {
     });
   }
 
-  get brandItems(): ComboBoxEntry<Brand>[] {
+  get brandItems(): BrandSelection[] {
     return this.brandEntries.map((brandEntry) => {
       return {
         text: brandEntry.name ?? "",
