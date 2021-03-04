@@ -1,152 +1,156 @@
 <template>
   <div id="main">
     <h1 id="title">Analytics</h1>
-    <v-autocomplete
+    <v-combobox
       class="search-input"
       v-model="selection"
-      :items="items"
-      :search-input.sync="search"
+      :items="suggestions"
+      :search-input.sync="analyticsSearch"
       hide-no-data
       placeholder="Search for an item, brand or category"
-    ></v-autocomplete>
+      clearable
+    ></v-combobox>
     <div id="search-results">
       <ShoppingItemAnalyticsComponent
         v-for="analytic in analytics"
         v-bind:key="analytic.index"
-        :analytics="analytic.analytics"
+        :analytics="analytic.data"
         :item="analytic.item"
       />
     </div>
   </div>
 </template>
 
-<script>
-import ShoppingItemAnalyticsComponent from "./ShoppingItemAnalytics";
+<script lang="ts">
+import ShoppingItemAnalyticsComponent from "./ShoppingItemAnalytics.vue";
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { AnalyticsResponse } from "@/models/Analytics";
+import { ComboBoxSelection } from "@/models/ComboBoxSelections";
+import { Item as ItemResponse } from "@/models/Requests";
+import {
+  ItemImpl,
+  BrandImpl,
+  CategoryImpl,
+  Suggestion,
+} from "@/models/Analytics";
+import JsonApi from "@/models/JsonApi";
 
-export default {
-  name: "AnalyticsSearch",
-  data() {
-    return {
-      analytics: [],
-      entries: [],
-      currentIndex: 0,
-      search: null,
-      selection: null
-    };
-  },
-  methods: {
-    getAnalyticsUrl(item) {
-      let type = item.type.toLowerCase();
-      let id = item.id;
-      let url;
-      if (type === "item") {
-        url = `${baseUrl}/items/${id}/analytics`;
-      } else {
-        url = `${baseUrl}/items/${type}/${id}/analytics`;
-      }
+type ElementImpl = ItemImpl | BrandImpl | CategoryImpl;
+interface Analytics {
+  index: number;
+  data: {
+    latestPrice: string;
+    latestStoreAndDate: string;
+    averagePrice: string;
+    item: ItemResponse;
+  };
+}
 
-      return url;
-    }
-  },
-
-  computed: {
-    items() {
-      if (this.entries === null || this.entries === "") return null;
-
-      let suggestions = [];
-      let categories = this.entries.categories;
-      if (categories != undefined && categories !== null) {
-        categories.forEach(category => {
-          let suggestion = {
-            text: `Category: ${category.name}`,
-            value: {
-              type: "Category",
-              id: category.id,
-              name: category.name
-            }
-          };
-          suggestions.push(suggestion);
-        });
-      }
-
-      let brands = this.entries.brands;
-      if (brands != undefined && brands !== null) {
-        brands.forEach(brand => {
-          let suggestion = {
-            text: `Brand: ${brand.name}`,
-            value: {
-              type: "Brand",
-              id: brand.id,
-              name: brand.name
-            }
-          };
-          suggestions.push(suggestion);
-        });
-      }
-
-      let items = this.entries.items;
-      if (items != undefined && items !== null) {
-        items.forEach(item => {
-          let suggestion = {
-            text: `Item: ${item.name}`,
-            value: {
-              type: "Item",
-              id: item.id,
-              name: item.name
-            }
-          };
-          suggestions.push(suggestion);
-        });
-      }
-      return suggestions;
-    }
-  },
-  watch: {
-    search(text) {
-      if (text === null || text === "") return;
-      let url = `${baseUrl}/suggestions?name=${text}`;
-      axios
-        .get(url, {
-          auth: defaultAuth
-        })
-        .then(response => {
-          if (response.data.data) this.entries = response.data.data;
-        })
-        .catch(() => {});
-    },
-    selection(selection) {
-      let url = this.getAnalyticsUrl(selection);
-      this.analytics = [];
-      axios
-        .get(url, {
-          auth: defaultAuth
-        })
-        .then()
-        .then(response => {
-          let data = response.data.data;
-          data.forEach(element => {
-            let nextIndex = this.currentIndex++;
-            let newAnalytics = {
-              index: nextIndex,
-              analytics: {
-                latestStoreAndDate: `${element.latestStore} on ${element.latestDate}`,
-                latestPrice: element.latestPrice,
-                averagePrice: element.averagePrice,
-                item: element.item
-              }
-            };
-            this.analytics.push(newAnalytics);
-          });
-        })
-        .catch(() => {});
-    }
-  },
+@Component({
   components: {
-    ShoppingItemAnalyticsComponent
+    ShoppingItemAnalyticsComponent,
+  },
+})
+export default class AnalyticsSearchComponent extends Vue {
+  analytics: Analytics[] = [];
+  suggestionResponse: Suggestion = null;
+  currentIndex: number = 0;
+  analyticsSearch: string = "";
+  selection: ComboBoxSelection<ElementImpl> = null;
+
+  getAnalyticsUrl(selection: ElementImpl): string {
+    return `${baseUrl}/${selection.path}`;
   }
-};
+
+  get suggestions(): ComboBoxSelection<ElementImpl>[] {
+    if (this.suggestionResponse == null ) return [];
+
+    let suggestions: ComboBoxSelection<ElementImpl>[] = [];
+    this.transform(this.suggestionResponse, suggestions);
+
+    return suggestions;
+  }
+
+  @Watch("analyticsSearch")
+  search(newValue: string) {
+    if (newValue == null || newValue == "") return;
+
+    let url = `${baseUrl}/suggestions?name=${newValue}`;
+    axios
+      .get<JsonApi<Suggestion>>(url, {
+        auth: defaultAuth,
+      })
+      .then((response) => {
+        if (response.status == 200) {
+          this.suggestionResponse = response.data.data;
+        } else this.suggestionResponse = null;
+      });
+  }
+
+  @Watch("selection")
+  onSelectionPropertyChanged(newValue: ComboBoxSelection<ElementImpl>) {
+    if (newValue == null || newValue.value == null) return;
+    let url = this.getAnalyticsUrl(newValue.value);
+
+    this.analytics = [];
+    axios
+      .get<JsonApi<AnalyticsResponse[]>>(url, {
+        auth: defaultAuth,
+      })
+      .then()
+      .then((response) => {
+        let data = response.data.data;
+        data.forEach((element) => {
+          let nextIndex: number = this.currentIndex++;
+          let newAnalytics: Analytics = {
+            index: nextIndex,
+            data: {
+              latestStoreAndDate: `${element.latestStore} on ${element.latestDate}`,
+              latestPrice: element.latestPrice,
+              averagePrice: element.averagePrice,
+              item: element.item,
+            },
+          };
+          this.analytics.push(newAnalytics);
+        });
+      })
+      .catch(() => {});
+  }
+
+  private transform(
+    suggestion: Suggestion,
+    accumulator: ComboBoxSelection<ElementImpl>[]
+  ): void {
+    suggestion.items?.forEach((item) => {
+      let itemImpl = new ItemImpl(item);
+      let suggestion: ComboBoxSelection<ElementImpl> = {
+        text: `Item: ${itemImpl.name}`,
+        value: itemImpl,
+      };
+      accumulator.push(suggestion);
+    });
+
+    suggestion.categories?.forEach((category) => {
+      let categoryImpl = new CategoryImpl(category);
+      let suggestion: ComboBoxSelection<ElementImpl> = {
+        text: `Category: ${categoryImpl.name}`,
+        value: categoryImpl,
+      };
+      accumulator.push(suggestion);
+    });
+
+    suggestion.brands?.forEach((brand) => {
+      let brandImpl = new BrandImpl(brand);
+      let suggestion: ComboBoxSelection<ElementImpl> = {
+        text: `Brand: ${brandImpl.name}`,
+        value: brandImpl,
+      };
+      accumulator.push(suggestion);
+    });
+  }
+}
 </script>
 
 <style scoped>

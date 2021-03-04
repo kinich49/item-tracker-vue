@@ -77,7 +77,7 @@ import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { Category, Item, Brand } from "@/models/Requests"
-import JsonApi from "@/models/responses/JsonApi";
+import JsonApi from "@/models/JsonApi";
 import {
   ItemSelection,
   CategorySelection,
