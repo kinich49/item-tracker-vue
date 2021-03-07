@@ -114,8 +114,6 @@ export default class ShoppingItemComponent extends Vue {
     return this.formatter.format(this.unitPrice * this.quantity);
   }
 
-  test(): void {}
-
   private getSuggestions( options: Array<Item | Brand | Category> ): Array<ItemSuggestion | BrandSuggestion | CategorySuggestion> {
     return options.map((option: Item | Brand | Category) => {
       return {
