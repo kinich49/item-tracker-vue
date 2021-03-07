@@ -116,9 +116,7 @@ export default class ShoppingItemComponent extends Vue {
 
   test(): void {}
 
-  private getSuggestions(
-    options: Item[] | Brand[] | Category[]
-  ): ItemSuggestion[] | BrandSuggestion[] | CategorySuggestion[] {
+  private getSuggestions( options: Array<Item | Brand | Category> ): Array<ItemSuggestion | BrandSuggestion | CategorySuggestion> {
     return options.map((option: Item | Brand | Category) => {
       return {
         text: option.name ?? "",
