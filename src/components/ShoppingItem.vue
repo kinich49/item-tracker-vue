@@ -11,7 +11,7 @@
     <v-combobox
       v-model="itemSelection"
       class="item-input"
-      :items="items"
+      :items="itemSuggestions"
       :search-input.sync="itemSearch"
       label="Item"
       placeholder="What did you buy?"
@@ -24,7 +24,7 @@
         <v-combobox
           v-model="brandSelection"
           class="brand-input"
-          :items="brandItems"
+          :items="brandSuggestions"
           :search-input.sync="brandSearch"
           label="Brand"
           placeholder="Search a brand..."
@@ -35,7 +35,7 @@
         <v-combobox
           v-model="categorySelection"
           class="category-input"
-          :items="categoryItems"
+          :items="categorySuggestions"
           :search-input.sync="categorySearch"
           label="Category"
           placeholder="Search a category..."
@@ -72,219 +72,202 @@
   </v-card>
 </template>
 
-<script>
+<script lang="ts">
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
-import _ from "lodash-es";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { Item, Category, Brand } from "@/models/RequestUnionResponse";
+import {
+  ItemSuggestion,
+  CategorySuggestion,
+  BrandSuggestion,
+} from "@/models/RequestUnionResponse";
+import JsonApi from "@/models/JsonApi";
 
-export default {
-  name: "ShoppingItem",
-  data: () => {
-    return {
-      expand: true,
-      itemSearch: null,
-      itemSelection: null,
-      itemEntries: null,
-      categorySearch: null,
-      categorySelection: null,
-      categoryEntries: null,
-      brandSearch: null,
-      brandSelection: null,
-      brandEntries: null,
-      quantity: null,
-      unitPrice: null,
-      unit: "Unit",
-      formatter: new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-      }),
-    };
-  },
-  props: {
-    indexId: Number,
-  },
-  computed: {
-    totalPrice() {
-      if (_.isNil(this.unitPrice) || _.isNil(this.quantity)) {
-        return null;
-      }
-      return this.formatter.format(this.unitPrice * this.quantity);
-    },
-    items() {
-      if (!this.itemEntries || this.itemEntries.length == 0) return [];
+@Component
+export default class ShoppingItemComponent extends Vue {
+  expand: boolean = true;
 
-      return this.itemEntries.map((itemEntry) => {
-        return {
-          text: itemEntry.name,
-          value: itemEntry,
-        };
-      });
-    },
-    categoryItems() {
-      if (!this.categoryEntries || this.categoryEntries.length == 0) return [];
+  itemSearch: string = "";
+  itemSuggestions: ItemSuggestion[] = [];
+  itemSelection: ItemSuggestion = null;
 
-      return this.categoryEntries.map((categoryEntry) => {
-        return {
-          text: categoryEntry.name,
-          value: categoryEntry,
-        };
-      });
-    },
-    brandItems() {
-      if (!this.brandEntries || this.brandEntries.length == 0) return [];
+  categorySearch: string = "";
+  categorySuggestions: CategorySuggestion[] = [];
+  categorySelection: CategorySuggestion = null;
 
-      return this.brandEntries.map((brandEntry) => {
-        return {
-          text: brandEntry.name,
-          value: brandEntry,
-        };
-      });
-    },
-    item() {
-      if (_.isNil(this.itemSelection)) return null;
+  brandSearch: string = "";
+  brandSuggestions: BrandSuggestion[] = [];
+  brandSelection: BrandSuggestion = null;
 
-      let itemId = null;
-      let itemName = null;
-      let brand = null;
-      let category = null;
-      let isNew = false;
+  quantity: number = 0;
+  unitPrice: number = 0.0;
+  unit: string = "Unit";
 
-      if (_.isString(this.itemSelection)) {
-        itemName = this.itemSelection;
-        isNew = true;
-      } else if (!_.isNil(this.itemSelection.value)) {
-        itemId = this.itemSelection.value.id;
-        itemName = this.itemSelection.value.name;
-        brand = this.itemSelection.value.brand;
-        category = this.itemSelection.value.category;
-      }
+  readonly formatter: Intl.NumberFormat = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  });
 
-      let item = {
-        id: itemId,
-        isNew: isNew,
-        name: itemName,
-        unit: this.unit,
-        brand: brand,
-        category: category,
-        currency: "MXN",
+  get totalPrice(): string {
+    return this.formatter.format(this.unitPrice * this.quantity);
+  }
+
+  private getSuggestions( options: Array<Item | Brand | Category> ): Array<ItemSuggestion | BrandSuggestion | CategorySuggestion> {
+    return options.map((option: Item | Brand | Category) => {
+      return {
+        text: option.name ?? "",
+        value: option,
       };
-      return item;
-    },
-    category() {
-      if (!this.categorySelection) return null;
+    });
+  }
 
-      let category;
-      if (_.isString(this.categorySelection)) {
-        category = {
-          id: null,
-          name: this.categorySelection,
-        };
-      } else {
-        category = this.categorySelection.value;
-      }
-      return category;
-    },
-    brand() {
-      if (!this.brandSelection) return null;
+  @Watch("itemSelection")
+  onItemSelectionPropertyChanged(newValue: ItemSuggestion): void {
+    if (newValue == null) {
+      this.categorySelection = null;
+      this.brandSelection = null;
+      this.$emit("update:itemname", null);
+      this.$emit("update:itemid", null);
+      return;
+    }
 
-      let brand;
-      if (_.isString(this.brandSelection)) {
-        brand = {
-          id: null,
-          name: this.brandSelection,
-        };
-      } else {
-        brand = this.brandSelection.value;
-      }
-      return brand;
-    },
-  },
-  watch: {
-    itemSearch(text) {
-      if (!text || !text.trim()) {
-        return;
-      }
-      let url = `${baseUrl}/items?name=${text}`;
-      axios
-        .get(url, {
-          auth: defaultAuth,
-        })
-        .then((result) => {
-          this.itemEntries = result.data.data;
-        })
-        .catch(() => {});
-    },
-    categorySearch(text) {
-      if (!text || !text.trim()) {
-        return;
-      }
-      let url = `${baseUrl}/categories?name=${text}`;
-      axios
-        .get(url, {
-          auth: defaultAuth,
-        })
-        .then((result) => {
-          this.categoryEntries = result.data.data;
-        })
-        .catch(() => {});
-    },
-    brandSearch(text) {
-      if (!text || !text.trim()) {
-        return;
-      }
-      let url = `${baseUrl}/brands?name=${text}`;
-      axios
-        .get(url, {
-          auth: defaultAuth,
-        })
-        .then((result) => {
-          this.brandEntries = result.data.data;
-        })
-        .catch(() => {});
-    },
-    item() {
-      if (_.isNil(this.item)) {
-        this.brandSelection = null;
-        this.categorySelection = null;
-        this.$emit("update:itemname", null);
-        this.$emit("update:itemid", null);
-        return;
-      }
+    let category: Category = newValue.value.category;
+    if (category != null) {
+      this.categorySelection = {
+        text: category.name,
+        value: category,
+      };
+    } else {
+      this.categorySelection = null;
+    }
 
-      if (!_.isNil(this.item.brand)) {
-        this.brandSelection = {
-          text: this.item.brand.name,
-          value: this.item.brand,
-        };
-      }
+    let brand: Brand = newValue.value.brand;
 
-      if (!_.isNil(this.item.category)) {
-        this.categorySelection = {
-          text: this.item.category.name,
-          value: this.item.category,
-        };
-      }
-      this.$emit("update:itemname", this.item.name);
-      this.$emit("update:itemid", this.item.id);
-    },
-    unitPrice() {
-      this.$emit("update:unitprice", this.unitPrice);
-    },
-    quantity() {
-      this.$emit("update:quantity", this.quantity);
-    },
-    category() {
-      this.$emit("update:category", this.category);
-    },
-    brand() {
-      this.$emit("update:brand", this.brand);
-    },
-    unit() {
-      this.$emit("update:unit", this.unit);
-    },
-  },
-};
+    if (brand != null) {
+      this.brandSelection = {
+        text: brand.name,
+        value: brand,
+      };
+    }
+
+    this.$emit("update:itemname", this.itemSelection.value.name);
+    this.$emit("update:itemid", this.itemSelection.value.id);
+  }
+
+  @Watch("itemSearch")
+  onItemSearchChanged(newValue: string): void {
+    if (newValue == null) return;
+
+    let url: string = `${baseUrl}/items?name=${newValue}`;
+
+    axios
+      .get<JsonApi<Item[]>>(url, {
+        auth: defaultAuth,
+      })
+      .then((result) => {
+        if (result.status == 200) {
+          this.itemSuggestions = this.getSuggestions(
+            result.data.data
+          ) as ItemSuggestion[];
+        } else {
+          let newSuggestion: Item = {
+            category: null,
+            brand: null,
+            currency: "MXN",
+            unit: "Unit",
+            name: newValue,
+          };
+          this.itemSuggestions = this.getSuggestions([
+            newSuggestion,
+          ]) as ItemSuggestion[];
+        }
+      })
+      .catch(() => {});
+  }
+
+  @Watch("brandSearch")
+  onBrandSearchChanged(newValue: string): void {
+    if (newValue == null) return;
+
+    let url: string = `${baseUrl}/brands?name=${newValue}`;
+
+    axios
+      .get<JsonApi<Brand[]>>(url, {
+        auth: defaultAuth,
+      })
+      .then((result) => {
+        if (result.status == 200) {
+          this.brandSuggestions = this.getSuggestions(
+            result.data.data
+          ) as BrandSuggestion[];
+        } else {
+          let newSuggestion: Brand = {
+            name: newValue,
+          };
+          this.brandSuggestions = this.getSuggestions([
+            newSuggestion,
+          ]) as BrandSuggestion[];
+        }
+      })
+      .catch(() => {});
+  }
+
+  @Watch("categorySearch")
+  onCategorySearchChanged(newValue: string): void {
+    if (newValue == null) return;
+
+    let url: string = `${baseUrl}/categories?name=${newValue}`;
+
+    axios
+      .get<JsonApi<Category[]>>(url, {
+        auth: defaultAuth,
+      })
+      .then((result) => {
+        if (result.status == 200) {
+          this.categorySuggestions = this.getSuggestions(
+            result.data.data
+          ) as CategorySuggestion[];
+        } else {
+          let newSuggestion: Category = {
+            name: newValue,
+          };
+          this.categorySuggestions = this.getSuggestions([
+            newSuggestion,
+          ]) as CategorySuggestion[];
+        }
+      })
+      .catch(() => {});
+  }
+
+  @Watch("unitPrice")
+  onUnitPriceChanged(newValue: number): void {
+    this.$emit("update:unitprice", newValue);
+  }
+
+  @Watch("quantity")
+  onQuantityChanged(newValue: number): void {
+    this.$emit("update:quantity", newValue);
+  }
+
+  @Watch("categorySelection")
+  onCategoryChanged(newValue: CategorySuggestion): void {
+    if (newValue == null) this.$emit("update:category", null);
+    else this.$emit("update:category", newValue.value);
+  }
+
+  @Watch("brandSelection")
+  onBrandChanged(newValue: BrandSuggestion): void {
+    if (newValue == null) this.$emit("update:brand", null);
+    else this.$emit("update:brand", newValue.value);
+  }
+
+  @Watch("unit")
+  onUnitChanged() {
+    this.$emit("update:unit", this.unit);
+  }
+}
 </script>
 
 <style scoped>

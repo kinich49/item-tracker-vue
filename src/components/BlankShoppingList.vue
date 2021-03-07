@@ -5,7 +5,7 @@
       <v-combobox
         class="shopping-store-input"
         v-model="storeSelection"
-        :items="items"
+        :items="storeSuggestions"
         label="Store"
         :search-input.sync="storeSearch"
         placeholder="Where did you shop?"
@@ -25,7 +25,7 @@
       </div>
 
       <div v-else id="shopping-list">
-        <ShoppingItem
+        <ShoppingItemComponent
           v-for="shoppingItem in shoppingItems"
           v-bind:key="shoppingItem.shoppingItemKey"
           v-bind:itemname.sync="shoppingItem.item.name"
@@ -35,7 +35,6 @@
           v-bind:brand.sync="shoppingItem.item.brand"
           v-bind:category.sync="shoppingItem.item.category"
           v-bind:unit.sync="shoppingItem.item.unit"
-          v-bind:indexId="shoppingItem.index"
           v-on:dismiss-item="removeItem(shoppingItem)"
         />
       </div>
@@ -53,113 +52,86 @@
   </div>
 </template>
 
-<script>
-import ShoppingItem from "./ShoppingItem.vue";
+<script lang="ts">
+
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
-import _ from "lodash-es";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { StoreSuggestion } from "@/models/RequestUnionResponse"
+import ShoppingItemComponent from "./ShoppingItem.vue"
+import { ShoppingItem, Store, ShoppingList } from "@/models/Requests"
+import JsonApi from "@/models/JsonApi"
 
-export default {
-  name: "BlankShoppingList",
-  data() {
-    return {
-      shoppingDate: null,
-      testBrand: null,
-      shoppingItems: [],
-      storeSearch: null,
-      storeSelection: null,
-      storeEntries: null,
-      maxShoppingItemKey: 0,
-    };
-  },
-  computed: {
-    items() {
-      if (_.isNil(this.storeEntries) || this.storeEntries.length == 0)
-        return [];
+interface ShoppingItemWrapper {
+  shoppingItemKey: number,
+  item: ShoppingItem
+}
 
-      return this.storeEntries.map((storeEntry) => {
-        return {
-          text: storeEntry.name,
-          value: storeEntry,
-        };
-      });
-    },
-    store() {
-      if (this.storeSelection === undefined || this.storeSelection === null)
-        return null;
+@Component({
+  components: {
+    ShoppingItemComponent
+  }
+})
+export default class BlankShoppingListComponent extends Vue {
 
-      if (_.isString(this.storeSelection)) {
-        return {
-          id: null,
-          name: this.storeSelection,
-        };
-      } else {
-        return this.storeSelection.value;
+  shoppingDate: Date = new Date();
+  shoppingItems: ShoppingItemWrapper[] = [];
+  storeSearch: string = "";
+  storeSuggestions: StoreSuggestion[] = [];
+  storeSelection: StoreSuggestion = null;
+  maxShoppingItemKey: number = 0;
+
+  private getStoreSuggestions(stores: Store[]): StoreSuggestion[] {
+    return stores.map(store => {
+      return {
+        text: store.name ?? "",
+        value: store
       }
-    },
-  },
-  methods: {
-    removeItem(shoppingItem) {
-      var index = this.shoppingItems.indexOf(shoppingItem);
+    })
+  }
+
+  removeItem(shoppingItem: ShoppingItemWrapper): void {
+      const index = this.shoppingItems.indexOf(shoppingItem);
       if (index > -1) {
         this.shoppingItems.splice(index, 1);
       }
-    },
-    isReadyToSumbit() {
-      return true;
-    },
-    isShoppingItemValid() {
-      return true;
-      // (
-      // !_.isNil(item) &&
-      // !_.isNil(item.category) &&
-      // this.isItemElementNameValid(item) &&
-      // this.isItemElementNameValid(item.category) &&
-      // this.isItemNumberValid(item.quantity) &&
-      // this.isItemNumberValid(item.unitPrice)
-      // );
-    },
-    isItemElementNameValid(value) {
-      return (
-        !_.isNil(value) && !_.isNil(value.name) && !_.isNil(value.name.trim())
-      );
-    },
-    isItemStringValid(value) {
-      return !_.isNil(value) && !_.isNil(value.trim());
-    },
-    isItemNumberValid(value) {
-      return !_.isNil(value) && value > 0;
-    },
+  }
+  
+  isReadyToSubmit(): boolean {
+    return true;
+  }
 
-    addBlankShoppingItem() {
-      let shoppingItem = {
-        shoppingItemKey: this.maxShoppingItemKey,
-        item: {
-          name: null,
-          id: null,
-          unitPrice: null,
-          quantity: null,
-          brand: null,
-          category: null,
-          unit: "Unit",
-          currency: "MXN",
-        },
-      };
-      this.shoppingItems.push(shoppingItem);
-      this.maxShoppingItemKey += 1;
-    },
+  addBlankShoppingItem() {
+    let shoppingItem: ShoppingItemWrapper = {
+      shoppingItemKey: this.maxShoppingItemKey,
+      item: {
+        name: "",
+        id: null,
+        unitPrice: 0,
+        quantity: 0,
+        brand: null,
+        category: null,
+        unit: "Unit",
+        currency: "MXN",
+      },
+    };
+    this.shoppingItems.push(shoppingItem);
+    this.maxShoppingItemKey += 1;
+  }
+
     submitShoppingList() {
-      if (!this.isReadyToSumbit()) {
+      if (!this.isReadyToSubmit()) {
         return;
       }
 
-      let elements = this.shoppingItems.map((i) => i.item);
+      let elements: Array<ShoppingItem> = this.shoppingItems.map((i) => i.item);
 
-      const shoppingList = {
+      const shoppingList: ShoppingList = {
         shoppingDate: this.shoppingDate,
-        store: this.store,
+        store: this.storeSelection.value,
         shoppingItems: elements,
       };
+
       const url = `${baseUrl}/shoppingLists`;
       axios
         .post(url, shoppingList, {
@@ -169,28 +141,33 @@ export default {
           this.$router.push("/");
         })
         .catch(() => {});
-    },
-  },
-  watch: {
-    storeSearch(text) {
-      if (text === "" || text === undefined) {
-        return;
-      }
-      let url = `${baseUrl}/stores?name=${text}`;
-      axios
-        .get(url, {
-          auth: defaultAuth,
-        })
-        .then((result) => {
-          this.storeEntries = result.data.data;
-        })
-        .catch(() => {});
-    },
-  },
-  components: {
-    ShoppingItem,
-  },
-};
+    }
+  @Watch("storeSearch")
+  onStoreSearchPropertyChanged(newValue: string) {
+    if (newValue === "" || newValue == null) {
+      return;
+    }
+
+    let url = `${baseUrl}/stores?name=${newValue}`;
+
+    axios
+      .get<JsonApi<Store[]>>(url, {
+        auth: defaultAuth,
+      })
+      .then((result) => {
+        if (result.status == 200) {
+            this.storeSuggestions  = this.getStoreSuggestions(result.data.data);
+          } else {
+            let newStoreChoice: Store = {
+              id: null,
+              name: newValue
+            };
+            this.storeSuggestions = this.getStoreSuggestions([newStoreChoice])
+          }
+      })
+      .catch(() => {});
+  }
+}
 </script>
 
 <style scoped>
