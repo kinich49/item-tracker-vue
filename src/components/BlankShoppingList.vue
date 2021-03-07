@@ -5,7 +5,7 @@
       <v-combobox
         class="shopping-store-input"
         v-model="storeSelection"
-        :items="stores"
+        :items="storeSuggestions"
         label="Store"
         :search-input.sync="storeSearch"
         placeholder="Where did you shop?"
@@ -57,7 +57,7 @@
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
 import { Component, Vue, Watch } from "vue-property-decorator";
-import { StoreSelection } from "@/models/ComboBoxSelections"
+import { StoreSuggestion } from "@/models/RequestUnionResponse"
 import ShoppingItemComponent from "./ShoppingItem.vue"
 import { ShoppingItem, Store, ShoppingList } from "@/models/Requests"
 import JsonApi from "@/models/JsonApi"
@@ -77,11 +77,11 @@ export default class BlankShoppingListComponent extends Vue {
   shoppingDate: Date = new Date();
   shoppingItems: ShoppingItemWrapper[] = [];
   storeSearch: string = "";
-  storeSelection: StoreSelection = null;
+  storeSelection: StoreSuggestion = null;
   storeOptions: Store[] = []
   maxShoppingItemKey: number = 0;
 
-  get stores(): StoreSelection[] {
+  get storeSuggestions(): StoreSuggestion[] {
     return this.storeOptions.map((storeOption) => {
       return {
         text: storeOption.name ?? "",

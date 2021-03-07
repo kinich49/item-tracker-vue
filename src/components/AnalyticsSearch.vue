@@ -26,15 +26,9 @@ import ShoppingItemAnalyticsComponent from "./ShoppingItemAnalytics.vue";
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
 import { Component, Vue, Watch } from "vue-property-decorator";
-import { AnalyticsResponse } from "@/models/Analytics";
-import { ComboBoxSelection } from "@/models/ComboBoxSelections";
-import { Item as ItemResponse } from "@/models/Requests";
-import {
-  ItemImpl,
-  BrandImpl,
-  CategoryImpl,
-  Suggestion,
-} from "@/models/Analytics";
+import { ComboBoxSuggestion } from "@/models/ComboBoxSuggestion";
+import { Item, AnalyticsModel, SuggestionModel } from "@/models/Responses";
+import { ItemImpl, BrandImpl, CategoryImpl } from "@/models/Analytics";
 import JsonApi from "@/models/JsonApi";
 
 type ElementImpl = ItemImpl | BrandImpl | CategoryImpl;
@@ -44,7 +38,7 @@ interface Analytics {
     latestPrice: string;
     latestStoreAndDate: string;
     averagePrice: string;
-    item: ItemResponse;
+    item: Item;
   };
 }
 
@@ -55,19 +49,19 @@ interface Analytics {
 })
 export default class AnalyticsSearchComponent extends Vue {
   analytics: Analytics[] = [];
-  suggestionResponse: Suggestion = null;
+  suggestionResponse: SuggestionModel = null;
   currentIndex: number = 0;
   analyticsSearch: string = "";
-  selection: ComboBoxSelection<ElementImpl> = null;
+  selection: ComboBoxSuggestion<ElementImpl> = null;
 
   getAnalyticsUrl(selection: ElementImpl): string {
     return `${baseUrl}/${selection.path}`;
   }
 
-  get suggestions(): ComboBoxSelection<ElementImpl>[] {
+  get suggestions(): ComboBoxSuggestion<ElementImpl>[] {
     if (this.suggestionResponse == null ) return [];
 
-    let suggestions: ComboBoxSelection<ElementImpl>[] = [];
+    let suggestions: ComboBoxSuggestion<ElementImpl>[] = [];
     this.transform(this.suggestionResponse, suggestions);
 
     return suggestions;
@@ -79,7 +73,7 @@ export default class AnalyticsSearchComponent extends Vue {
 
     let url = `${baseUrl}/suggestions?name=${newValue}`;
     axios
-      .get<JsonApi<Suggestion>>(url, {
+      .get<JsonApi<SuggestionModel>>(url, {
         auth: defaultAuth,
       })
       .then((response) => {
@@ -90,13 +84,13 @@ export default class AnalyticsSearchComponent extends Vue {
   }
 
   @Watch("selection")
-  onSelectionPropertyChanged(newValue: ComboBoxSelection<ElementImpl>) {
+  onSelectionPropertyChanged(newValue: ComboBoxSuggestion<ElementImpl>) {
     if (newValue == null || newValue.value == null) return;
     let url = this.getAnalyticsUrl(newValue.value);
 
     this.analytics = [];
     axios
-      .get<JsonApi<AnalyticsResponse[]>>(url, {
+      .get<JsonApi<AnalyticsModel[]>>(url, {
         auth: defaultAuth,
       })
       .then()
@@ -120,12 +114,12 @@ export default class AnalyticsSearchComponent extends Vue {
   }
 
   private transform(
-    suggestion: Suggestion,
-    accumulator: ComboBoxSelection<ElementImpl>[]
+    suggestion: SuggestionModel,
+    accumulator: ComboBoxSuggestion<ElementImpl>[]
   ): void {
     suggestion.items?.forEach((item) => {
       let itemImpl = new ItemImpl(item);
-      let suggestion: ComboBoxSelection<ElementImpl> = {
+      let suggestion: ComboBoxSuggestion<ElementImpl> = {
         text: `Item: ${itemImpl.name}`,
         value: itemImpl,
       };
@@ -134,7 +128,7 @@ export default class AnalyticsSearchComponent extends Vue {
 
     suggestion.categories?.forEach((category) => {
       let categoryImpl = new CategoryImpl(category);
-      let suggestion: ComboBoxSelection<ElementImpl> = {
+      let suggestion: ComboBoxSuggestion<ElementImpl> = {
         text: `Category: ${categoryImpl.name}`,
         value: categoryImpl,
       };
@@ -143,7 +137,7 @@ export default class AnalyticsSearchComponent extends Vue {
 
     suggestion.brands?.forEach((brand) => {
       let brandImpl = new BrandImpl(brand);
-      let suggestion: ComboBoxSelection<ElementImpl> = {
+      let suggestion: ComboBoxSuggestion<ElementImpl> = {
         text: `Brand: ${brandImpl.name}`,
         value: brandImpl,
       };

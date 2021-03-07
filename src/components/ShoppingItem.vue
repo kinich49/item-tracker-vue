@@ -11,7 +11,7 @@
     <v-combobox
       v-model="itemSelection"
       class="item-input"
-      :items="items"
+      :items="itemSuggestions"
       :search-input.sync="itemSearch"
       label="Item"
       placeholder="What did you buy?"
@@ -24,7 +24,7 @@
         <v-combobox
           v-model="brandSelection"
           class="brand-input"
-          :items="brandItems"
+          :items="brandSuggestions"
           :search-input.sync="brandSearch"
           label="Brand"
           placeholder="Search a brand..."
@@ -35,7 +35,7 @@
         <v-combobox
           v-model="categorySelection"
           class="category-input"
-          :items="categoryItems"
+          :items="categorySuggestions"
           :search-input.sync="categorySearch"
           label="Category"
           placeholder="Search a category..."
@@ -76,29 +76,25 @@
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
 import { Component, Vue, Watch } from "vue-property-decorator";
-import { Category, Item, Brand } from "@/models/Requests"
+import { Item, Category, Brand } from "@/models/RequestUnionResponse";
+import { ItemSuggestion, CategorySuggestion, BrandSuggestion } from "@/models/RequestUnionResponse";
 import JsonApi from "@/models/JsonApi";
-import {
-  ItemSelection,
-  CategorySelection,
-  BrandSelection,
-} from "@/models/ComboBoxSelections";
 
 @Component
 export default class ShoppingItemComponent extends Vue {
   expand: boolean = true;
 
   itemSearch: string = "";
-  itemEntries: Item[] = [];
-  itemSelection: ItemSelection = null;
+  itemOptions: Item[] = [];
+  itemSelection: ItemSuggestion = null;
 
   categorySearch: string = "";
-  categoryEntries: Category[] = [];
-  categorySelection: CategorySelection = null;
+  categoryOptions: Category[] = [];
+  categorySelection: CategorySuggestion = null;
 
   brandSearch: string = "";
-  brandEntries: Brand[] = [];
-  brandSelection: BrandSelection = null;
+  brandOptions: Brand[] = [];
+  brandSelection: BrandSuggestion = null;
 
   quantity: number = 0;
   unitPrice: number = 0.0;
@@ -114,35 +110,35 @@ export default class ShoppingItemComponent extends Vue {
     return this.formatter.format(this.unitPrice * this.quantity);
   }
 
-  get items(): ItemSelection[] {
-    return this.itemEntries.map((itemEntry) => {
+  get itemSuggestions(): ItemSuggestion[] {
+    return this.itemOptions.map((option) => {
       return {
-        text: itemEntry.name ?? "",
-        value: itemEntry,
+        text: option.name ?? "",
+        value: option,
       };
     });
   }
 
-  get categoryItems(): CategorySelection[] {
-    return this.categoryEntries.map((categoryEntry) => {
+  get categorySuggestions(): CategorySuggestion[] {
+    return this.categoryOptions.map((option) => {
       return {
-        text: categoryEntry.name ?? "",
-        value: categoryEntry,
+        text: option.name ?? "",
+        value: option,
       };
     });
   }
 
-  get brandItems(): BrandSelection[] {
-    return this.brandEntries.map((brandEntry) => {
+  get brandSuggestions(): BrandSuggestion[] {
+    return this.brandOptions.map((option) => {
       return {
-        text: brandEntry.name ?? "",
-        value: brandEntry,
+        text: option.name ?? "",
+        value: option,
       };
     });
   }
 
   @Watch("itemSelection")
-  onItemSelectionPropertyChanged(newValue: ItemSelection): void {
+  onItemSelectionPropertyChanged(newValue: ItemSuggestion): void {
     if (newValue == null) {
       this.categorySelection = null;
       this.brandSelection = null;
@@ -152,7 +148,7 @@ export default class ShoppingItemComponent extends Vue {
     }
 
     let category: Category = newValue.value.category;
-    if (category != null) {
+        if (category != null) {
       this.categorySelection = {
         text: category.name,
         value: category,
@@ -186,17 +182,16 @@ export default class ShoppingItemComponent extends Vue {
       })
       .then((result) => {
         if (result.status == 200) {
-          this.itemEntries = result.data.data;
+          this.itemOptions = result.data.data;
         } else {
           let newItemEntry: Item = {
             category: null,
             brand: null,
             currency: "MXN",
             unit: "Unit",
-            id: null,
             name: newValue,
           };
-          this.itemEntries.push(newItemEntry);
+          this.itemOptions.push(newItemEntry);
         }
       })
       .catch(() => {});
@@ -214,13 +209,12 @@ export default class ShoppingItemComponent extends Vue {
       })
       .then((result) => {
         if (result.status == 200) {
-          this.brandEntries = result.data.data;
+          this.brandOptions = result.data.data;
         } else {
           let newBrandEntry: Brand = {
-            id: null,
             name: newValue,
           };
-          this.brandEntries.push(newBrandEntry);
+          this.brandOptions.push(newBrandEntry);
         }
       })
       .catch(() => {});
@@ -234,17 +228,16 @@ export default class ShoppingItemComponent extends Vue {
 
     axios
       .get<JsonApi<Category[]>>(url, {
-        auth: defaultAuth,
+        auth: defaultAuth
       })
       .then((result) => {
         if (result.status == 200) {
-          this.categoryEntries = result.data.data;
+          this.categoryOptions = result.data.data;
         } else {
           let newCategoryEntry: Category = {
-            id: null,
             name: newValue,
           };
-          this.categoryEntries.push(newCategoryEntry);
+          this.categoryOptions.push(newCategoryEntry);
         }
       })
       .catch(() => {});
@@ -261,13 +254,13 @@ export default class ShoppingItemComponent extends Vue {
   }
 
   @Watch("categorySelection")
-  onCategoryChanged(newValue: ItemSelection): void {
+  onCategoryChanged(newValue: CategorySuggestion): void {
     if (newValue == null) this.$emit("update:category", null);
     else this.$emit("update:category", newValue.value);
   }
 
   @Watch("brandSelection")
-  onBrandChanged(newValue: BrandSelection): void {
+  onBrandChanged(newValue: BrandSuggestion): void {
     if (newValue == null) this.$emit("update:brand", null);
     else this.$emit("update:brand", newValue.value);
   }

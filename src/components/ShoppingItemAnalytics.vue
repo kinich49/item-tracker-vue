@@ -32,13 +32,13 @@
 </template>
 
 <script lang="ts">
-import { AnalyticsResponse } from "@/models/Analytics";
+import { AnalyticsModel } from "@/models/Responses";
 import { Component, Prop, Vue } from "vue-property-decorator";
 
 @Component
 export default class ShoppingItemAnalyticsComponent extends Vue {
-  @Prop({ required: true, type: Object as () => AnalyticsResponse })
-  analytics!: AnalyticsResponse;
+  @Prop({ required: true, type: Object as () => AnalyticsModel })
+  analytics!: AnalyticsModel;
 }
 </script>
 
