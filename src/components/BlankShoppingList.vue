@@ -77,15 +77,15 @@ export default class BlankShoppingListComponent extends Vue {
   shoppingDate: Date = new Date();
   shoppingItems: ShoppingItemWrapper[] = [];
   storeSearch: string = "";
+  storeSuggestions: StoreSuggestion[] = [];
   storeSelection: StoreSuggestion = null;
-  storeOptions: Store[] = []
   maxShoppingItemKey: number = 0;
 
-  get storeSuggestions(): StoreSuggestion[] {
-    return this.storeOptions.map((storeOption) => {
+  private getStoreSuggestions(stores: Store[]): StoreSuggestion[] {
+    return stores.map(store => {
       return {
-        text: storeOption.name ?? "",
-        value: storeOption
+        text: store.name ?? "",
+        value: store
       }
     })
   }
@@ -156,13 +156,13 @@ export default class BlankShoppingListComponent extends Vue {
       })
       .then((result) => {
         if (result.status == 200) {
-            this.storeOptions = result.data.data;
+            this.storeSuggestions  = this.getStoreSuggestions(result.data.data);
           } else {
             let newStoreChoice: Store = {
               id: null,
               name: newValue
             };
-            this.storeOptions.push(newStoreChoice);
+            this.storeSuggestions = this.getStoreSuggestions([newStoreChoice])
           }
       })
       .catch(() => {});

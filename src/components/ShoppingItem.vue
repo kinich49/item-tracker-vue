@@ -77,7 +77,11 @@ import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { Item, Category, Brand } from "@/models/RequestUnionResponse";
-import { ItemSuggestion, CategorySuggestion, BrandSuggestion } from "@/models/RequestUnionResponse";
+import {
+  ItemSuggestion,
+  CategorySuggestion,
+  BrandSuggestion,
+} from "@/models/RequestUnionResponse";
 import JsonApi from "@/models/JsonApi";
 
 @Component
@@ -85,15 +89,15 @@ export default class ShoppingItemComponent extends Vue {
   expand: boolean = true;
 
   itemSearch: string = "";
-  itemOptions: Item[] = [];
+  itemSuggestions: ItemSuggestion[] = [];
   itemSelection: ItemSuggestion = null;
 
   categorySearch: string = "";
-  categoryOptions: Category[] = [];
+  categorySuggestions: CategorySuggestion[] = [];
   categorySelection: CategorySuggestion = null;
 
   brandSearch: string = "";
-  brandOptions: Brand[] = [];
+  brandSuggestions: BrandSuggestion[] = [];
   brandSelection: BrandSuggestion = null;
 
   quantity: number = 0;
@@ -110,26 +114,12 @@ export default class ShoppingItemComponent extends Vue {
     return this.formatter.format(this.unitPrice * this.quantity);
   }
 
-  get itemSuggestions(): ItemSuggestion[] {
-    return this.itemOptions.map((option) => {
-      return {
-        text: option.name ?? "",
-        value: option,
-      };
-    });
-  }
+  test(): void {}
 
-  get categorySuggestions(): CategorySuggestion[] {
-    return this.categoryOptions.map((option) => {
-      return {
-        text: option.name ?? "",
-        value: option,
-      };
-    });
-  }
-
-  get brandSuggestions(): BrandSuggestion[] {
-    return this.brandOptions.map((option) => {
+  private getSuggestions(
+    options: Item[] | Brand[] | Category[]
+  ): ItemSuggestion[] | BrandSuggestion[] | CategorySuggestion[] {
+    return options.map((option: Item | Brand | Category) => {
       return {
         text: option.name ?? "",
         value: option,
@@ -148,7 +138,7 @@ export default class ShoppingItemComponent extends Vue {
     }
 
     let category: Category = newValue.value.category;
-        if (category != null) {
+    if (category != null) {
       this.categorySelection = {
         text: category.name,
         value: category,
@@ -182,16 +172,20 @@ export default class ShoppingItemComponent extends Vue {
       })
       .then((result) => {
         if (result.status == 200) {
-          this.itemOptions = result.data.data;
+          this.itemSuggestions = this.getSuggestions(
+            result.data.data
+          ) as ItemSuggestion[];
         } else {
-          let newItemEntry: Item = {
+          let newSuggestion: Item = {
             category: null,
             brand: null,
             currency: "MXN",
             unit: "Unit",
             name: newValue,
           };
-          this.itemOptions.push(newItemEntry);
+          this.itemSuggestions = this.getSuggestions([
+            newSuggestion,
+          ]) as ItemSuggestion[];
         }
       })
       .catch(() => {});
@@ -209,12 +203,16 @@ export default class ShoppingItemComponent extends Vue {
       })
       .then((result) => {
         if (result.status == 200) {
-          this.brandOptions = result.data.data;
+          this.brandSuggestions = this.getSuggestions(
+            result.data.data
+          ) as BrandSuggestion[];
         } else {
-          let newBrandEntry: Brand = {
+          let newSuggestion: Brand = {
             name: newValue,
           };
-          this.brandOptions.push(newBrandEntry);
+          this.brandSuggestions = this.getSuggestions([
+            newSuggestion,
+          ]) as BrandSuggestion[];
         }
       })
       .catch(() => {});
@@ -228,16 +226,20 @@ export default class ShoppingItemComponent extends Vue {
 
     axios
       .get<JsonApi<Category[]>>(url, {
-        auth: defaultAuth
+        auth: defaultAuth,
       })
       .then((result) => {
         if (result.status == 200) {
-          this.categoryOptions = result.data.data;
+          this.categorySuggestions = this.getSuggestions(
+            result.data.data
+          ) as CategorySuggestion[];
         } else {
-          let newCategoryEntry: Category = {
+          let newSuggestion: Category = {
             name: newValue,
           };
-          this.categoryOptions.push(newCategoryEntry);
+          this.categorySuggestions = this.getSuggestions([
+            newSuggestion,
+          ]) as CategorySuggestion[];
         }
       })
       .catch(() => {});
