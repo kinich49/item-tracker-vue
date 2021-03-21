@@ -17,7 +17,8 @@
         color="primary"
         tile
         id="submit-shopping-list"
-        v-on:click="submitShoppingList()"
+        @click="submitShoppingList()"
+        :disabled="isListSaved"
         >Save</v-btn
       >
       <div id="empty-message-container" v-if="shoppingItems.length <= 0">
@@ -53,48 +54,47 @@
 </template>
 
 <script lang="ts">
-
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
 import { Component, Vue, Watch } from "vue-property-decorator";
-import { StoreSuggestion } from "@/models/RequestUnionResponse"
-import ShoppingItemComponent from "./ShoppingItem.vue"
-import { ShoppingItem, Store, ShoppingList } from "@/models/Requests"
-import JsonApi from "@/models/JsonApi"
+import { StoreSuggestion } from "@/models/RequestUnionResponse";
+import ShoppingItemComponent from "./ShoppingItem.vue";
+import { ShoppingItem, Store, ShoppingList } from "@/models/Requests";
+import JsonApi from "@/models/JsonApi";
 
 interface ShoppingItemWrapper {
-  shoppingItemKey: number,
-  item: ShoppingItem
+  shoppingItemKey: number;
+  item: ShoppingItem;
 }
 
 @Component({
   components: {
-    ShoppingItemComponent
-  }
+    ShoppingItemComponent,
+  },
 })
 export default class BlankShoppingListComponent extends Vue {
-
   shoppingDate: Date = new Date();
   shoppingItems: ShoppingItemWrapper[] = [];
   storeSearch: string = "";
   storeSuggestions: StoreSuggestion[] = [];
   storeSelection: StoreSuggestion = null;
   maxShoppingItemKey: number = 0;
+  isListSaved: boolean = false;
 
   private getStoreSuggestions(stores: Store[]): StoreSuggestion[] {
-    return stores.map(store => {
+    return stores.map((store) => {
       return {
         text: store.name ?? "",
-        value: store
-      }
-    })
+        value: store,
+      };
+    });
   }
 
   removeItem(shoppingItem: ShoppingItemWrapper): void {
-      const index = this.shoppingItems.indexOf(shoppingItem);
-      if (index > -1) {
-        this.shoppingItems.splice(index, 1);
-      }
+    const index = this.shoppingItems.indexOf(shoppingItem);
+    if (index > -1) {
+      this.shoppingItems.splice(index, 1);
+    }
   }
 
   addBlankShoppingItem(): void {
@@ -124,18 +124,20 @@ export default class BlankShoppingListComponent extends Vue {
     };
 
     const url = `${baseUrl}/shoppingLists`;
-    console.log("submitShoppingList")
-    this.$root.$emit('on-loading-change', true);
+    console.log("submitShoppingList");
+    this.$root.$emit("on-loading-change", true);
+    this.isListSaved = true;
     axios
       .post(url, shoppingList, {
         auth: defaultAuth,
       })
       .then(() => {
-        this.$root.$emit('on-loading-change', false);
+        this.$root.$emit("on-loading-change", false);
         this.$router.push("/");
       })
       .catch(() => {
-        this.$root.$emit('on-loading-change', false);
+        this.isListSaved = false;
+        this.$root.$emit("on-loading-change", false);
       });
   }
 
@@ -153,14 +155,14 @@ export default class BlankShoppingListComponent extends Vue {
       })
       .then((result) => {
         if (result.status == 200) {
-            this.storeSuggestions  = this.getStoreSuggestions(result.data.data);
-          } else {
-            let newStoreChoice: Store = {
-              id: null,
-              name: newValue
-            };
-            this.storeSuggestions = this.getStoreSuggestions([newStoreChoice])
-          }
+          this.storeSuggestions = this.getStoreSuggestions(result.data.data);
+        } else {
+          let newStoreChoice: Store = {
+            id: null,
+            name: newValue,
+          };
+          this.storeSuggestions = this.getStoreSuggestions([newStoreChoice]);
+        }
       })
       .catch(() => {});
   }
