@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark>
+    <v-app-bar app color="primary" dark >
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <div class="d-flex align-center">
         <v-img
@@ -13,6 +13,13 @@
         />
       </div>
       <v-toolbar-title>Item Tracker</v-toolbar-title>
+            <v-progress-linear
+            :active="loading"
+            indeterminate
+            color="yellow darken-2"
+            absolute
+            bottom
+      ></v-progress-linear>
     </v-app-bar>
 
     <v-navigation-drawer app v-model="drawer" temporary bottom>
@@ -36,6 +43,7 @@
           <v-list-item-content>Analytics</v-list-item-content>
         </v-list-item>
       </v-list>
+      
       <template v-slot:append>
         <v-list dense nav>
           <v-list-item href="https://github.com/" target="_blank">
@@ -47,6 +55,7 @@
         </v-list>
       </template>
     </v-navigation-drawer>
+
     <v-content>
       <router-view />
     </v-content>
@@ -62,10 +71,19 @@ export default Vue.extend({
   components: {},
 
   data: () => ({
-    drawer: false
+    drawer: false,
+    loading: false
   }),
+
   metaInfo: {
     meta: [{ name: "viewport", content: "width-device-width, initial-scale=1" }]
-  }
+  },
+
+  mounted() {
+    this.$root.$on('on-loading-change', (data: boolean) => {
+        this.loading = data;
+    });
+}
 });
+
 </script>

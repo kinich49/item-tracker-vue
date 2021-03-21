@@ -32,7 +32,6 @@ export interface ShoppingItem extends Model {
 }
 
 export interface ShoppingList {
-    id?: number,
     shoppingDate: Date,
     store: Store,
     shoppingItems: Array<ShoppingItem>

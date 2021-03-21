@@ -96,17 +96,12 @@ export default class BlankShoppingListComponent extends Vue {
         this.shoppingItems.splice(index, 1);
       }
   }
-  
-  isReadyToSubmit(): boolean {
-    return true;
-  }
 
-  addBlankShoppingItem() {
+  addBlankShoppingItem(): void {
     let shoppingItem: ShoppingItemWrapper = {
       shoppingItemKey: this.maxShoppingItemKey,
       item: {
         name: "",
-        id: null,
         unitPrice: 0,
         quantity: 0,
         brand: null,
@@ -119,31 +114,33 @@ export default class BlankShoppingListComponent extends Vue {
     this.maxShoppingItemKey += 1;
   }
 
-    submitShoppingList() {
-      if (!this.isReadyToSubmit()) {
-        return;
-      }
+  submitShoppingList(): void {
+    let elements: Array<ShoppingItem> = this.shoppingItems.map((i) => i.item);
 
-      let elements: Array<ShoppingItem> = this.shoppingItems.map((i) => i.item);
+    const shoppingList: ShoppingList = {
+      shoppingDate: this.shoppingDate,
+      store: this.storeSelection?.value ?? null,
+      shoppingItems: elements,
+    };
 
-      const shoppingList: ShoppingList = {
-        shoppingDate: this.shoppingDate,
-        store: this.storeSelection.value,
-        shoppingItems: elements,
-      };
+    const url = `${baseUrl}/shoppingLists`;
+    console.log("submitShoppingList")
+    this.$root.$emit('on-loading-change', true);
+    axios
+      .post(url, shoppingList, {
+        auth: defaultAuth,
+      })
+      .then(() => {
+        this.$root.$emit('on-loading-change', false);
+        this.$router.push("/");
+      })
+      .catch(() => {
+        this.$root.$emit('on-loading-change', false);
+      });
+  }
 
-      const url = `${baseUrl}/shoppingLists`;
-      axios
-        .post(url, shoppingList, {
-          auth: defaultAuth,
-        })
-        .then(() => {
-          this.$router.push("/");
-        })
-        .catch(() => {});
-    }
   @Watch("storeSearch")
-  onStoreSearchPropertyChanged(newValue: string) {
+  onStoreSearchPropertyChanged(newValue: string): void {
     if (newValue === "" || newValue == null) {
       return;
     }
