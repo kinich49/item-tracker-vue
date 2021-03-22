@@ -158,7 +158,10 @@ export default class ShoppingItemComponent extends Vue {
 
   @Watch("itemSearch")
   onItemSearchChanged(newValue: string): void {
-    if (newValue == null) return;
+    if (newValue == null) {
+      this.itemSuggestions = []
+      return;
+    }
 
     let url: string = `${baseUrl}/items?name=${newValue}`;
 
@@ -189,7 +192,10 @@ export default class ShoppingItemComponent extends Vue {
 
   @Watch("brandSearch")
   onBrandSearchChanged(newValue: string): void {
-    if (newValue == null) return;
+    if (newValue == null) {
+      this.brandSuggestions = []
+      return;
+    }
 
     let url: string = `${baseUrl}/brands?name=${newValue}`;
 
@@ -216,7 +222,10 @@ export default class ShoppingItemComponent extends Vue {
 
   @Watch("categorySearch")
   onCategorySearchChanged(newValue: string): void {
-    if (newValue == null) return;
+    if (newValue == null) {
+      this.categorySuggestions = []
+      return;
+    }
 
     let url: string = `${baseUrl}/categories?name=${newValue}`;
 

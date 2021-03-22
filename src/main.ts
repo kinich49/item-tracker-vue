@@ -29,10 +29,23 @@ const router = new VueRouter({
   routes
 });
 
+router.beforeEach
 Vue.config.productionTip = false
 
 const vm = new Vue({
-  render: h => h(App),
+  render: createElement => createElement(App),
   vuetify,
-  router
+  router,
+  created: function() {
+    if (isCookieExistent("introduced")) {
+      this.$router.push("/blankShoppingList");
+    }
+  }
 }).$mount('#app')
+
+
+function isCookieExistent(name: string): boolean {
+  let allCookies = document.cookie
+  let cookie = allCookies.split('; ').find(row => row.startsWith(name))
+  return cookie ? true : false
+}

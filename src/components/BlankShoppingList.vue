@@ -12,12 +12,13 @@
         hide-no-data
         clearable
       ></v-combobox>
-      <input id="shopping-date-input" v-model="shoppingDate" type="date" />
+      <input id="shopping-date-input" v-model="shoppingDate" type="date" >
       <v-btn
         color="primary"
         tile
         id="submit-shopping-list"
-        v-on:click="submitShoppingList()"
+        @click="submitShoppingList()"
+        :disabled="isListSaved"
         >Save</v-btn
       >
       <div id="empty-message-container" v-if="shoppingItems.length <= 0">
@@ -74,12 +75,13 @@ interface ShoppingItemWrapper {
 })
 export default class BlankShoppingListComponent extends Vue {
 
-  shoppingDate: Date = new Date();
+  shoppingDate: string = "";
   shoppingItems: ShoppingItemWrapper[] = [];
   storeSearch: string = "";
   storeSuggestions: StoreSuggestion[] = [];
   storeSelection: StoreSuggestion = null;
   maxShoppingItemKey: number = 0;
+  isListSaved: boolean = false;
 
   private getStoreSuggestions(stores: Store[]): StoreSuggestion[] {
     return stores.map(store => {
@@ -96,17 +98,12 @@ export default class BlankShoppingListComponent extends Vue {
         this.shoppingItems.splice(index, 1);
       }
   }
-  
-  isReadyToSubmit(): boolean {
-    return true;
-  }
 
-  addBlankShoppingItem() {
+  addBlankShoppingItem(): void {
     let shoppingItem: ShoppingItemWrapper = {
       shoppingItemKey: this.maxShoppingItemKey,
       item: {
         name: "",
-        id: null,
         unitPrice: 0,
         quantity: 0,
         brand: null,
@@ -119,32 +116,38 @@ export default class BlankShoppingListComponent extends Vue {
     this.maxShoppingItemKey += 1;
   }
 
-    submitShoppingList() {
-      if (!this.isReadyToSubmit()) {
-        return;
-      }
+  submitShoppingList(): void {
+    let elements: Array<ShoppingItem> = this.shoppingItems.map((i) => i.item);
+    let date = new Date(this.shoppingDate)
 
-      let elements: Array<ShoppingItem> = this.shoppingItems.map((i) => i.item);
+    const shoppingList: ShoppingList = {
+      shoppingDate: date,
+      store: this.storeSelection?.value ?? null,
+      shoppingItems: elements,
+    };
 
-      const shoppingList: ShoppingList = {
-        shoppingDate: this.shoppingDate,
-        store: this.storeSelection.value,
-        shoppingItems: elements,
-      };
+    const url = `${baseUrl}/shoppingLists`;
 
-      const url = `${baseUrl}/shoppingLists`;
-      axios
-        .post(url, shoppingList, {
-          auth: defaultAuth,
-        })
-        .then(() => {
-          this.$router.push("/");
-        })
-        .catch(() => {});
-    }
+    this.$root.$emit("on-loading-change", true);
+    this.isListSaved = true;
+    axios
+      .post(url, shoppingList, {
+        auth: defaultAuth,
+      })
+      .then(() => {
+        this.$root.$emit("on-loading-change", false);
+        this.$router.push("/");
+      })
+      .catch(() => {
+        this.isListSaved = false;
+        this.$root.$emit("on-loading-change", false);
+      });
+  }
+
   @Watch("storeSearch")
-  onStoreSearchPropertyChanged(newValue: string) {
+  onStoreSearchPropertyChanged(newValue: string): void {
     if (newValue === "" || newValue == null) {
+      this.storeSuggestions = []
       return;
     }
 
@@ -156,7 +159,7 @@ export default class BlankShoppingListComponent extends Vue {
       })
       .then((result) => {
         if (result.status == 200) {
-            this.storeSuggestions  = this.getStoreSuggestions(result.data.data);
+            this.storeSuggestions = this.getStoreSuggestions(result.data.data);
           } else {
             let newStoreChoice: Store = {
               id: null,
@@ -167,7 +170,18 @@ export default class BlankShoppingListComponent extends Vue {
       })
       .catch(() => {});
   }
+
+  mounted() {
+    this.shoppingDate = this.parseDate(new Date())
+  }
+
+  private parseDate(date: Date): string{
+    return date.getFullYear().toString() + '-' + (date.getMonth() + 1).toString().padStart(2, "0") +
+    '-' + date.getDate().toString().padStart(2, "0");
+  }
+
 }
+
 </script>
 
 <style scoped>
