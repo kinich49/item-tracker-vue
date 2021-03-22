@@ -78,9 +78,7 @@ import { Component, Vue } from 'vue-property-decorator';
 export default class Home extends Vue {
 
   mounted() {
-    console.log("home mounted")
     document.cookie = "introduced=true; SameSite=lax; max-age=31536000"
-    console.log(document.cookie)
   }
 }
 </script>
