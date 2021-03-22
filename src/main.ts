@@ -29,10 +29,11 @@ const router = new VueRouter({
   routes
 });
 
+router.beforeEach
 Vue.config.productionTip = false
 
 const vm = new Vue({
-  render: h => h(App),
+  render: createElement => createElement(App),
   vuetify,
   router,
   created: function() {

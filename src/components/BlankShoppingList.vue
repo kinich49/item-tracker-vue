@@ -4,7 +4,7 @@
       <h1 id="shopping-label">Shopping Receipt</h1>
       <v-combobox
         class="shopping-store-input"
-        v-model.lazy="storeSelection"
+        v-model="storeSelection"
         :items="storeSuggestions"
         label="Store"
         :search-input.sync="storeSearch"
@@ -12,12 +12,13 @@
         hide-no-data
         clearable
       ></v-combobox>
-      <input id="shopping-date-input" v-model="shoppingDate" type="date" > 
+      <input id="shopping-date-input" v-model="shoppingDate" type="date" >
       <v-btn
         color="primary"
         tile
         id="submit-shopping-list"
         @click="submitShoppingList()"
+        :disabled="isListSaved"
         >Save</v-btn
       >
       <div id="empty-message-container" v-if="shoppingItems.length <= 0">
@@ -80,6 +81,7 @@ export default class BlankShoppingListComponent extends Vue {
   storeSuggestions: StoreSuggestion[] = [];
   storeSelection: StoreSuggestion = null;
   maxShoppingItemKey: number = 0;
+  isListSaved: boolean = false;
 
   private getStoreSuggestions(stores: Store[]): StoreSuggestion[] {
     return stores.map(store => {
@@ -96,17 +98,12 @@ export default class BlankShoppingListComponent extends Vue {
         this.shoppingItems.splice(index, 1);
       }
   }
-  
-  isReadyToSubmit(): boolean {
-    return true;
-  }
 
-  addBlankShoppingItem() {
+  addBlankShoppingItem(): void {
     let shoppingItem: ShoppingItemWrapper = {
       shoppingItemKey: this.maxShoppingItemKey,
       item: {
         name: "",
-        id: null,
         unitPrice: 0,
         quantity: 0,
         brand: null,
@@ -119,36 +116,38 @@ export default class BlankShoppingListComponent extends Vue {
     this.maxShoppingItemKey += 1;
   }
 
-  submitShoppingList() {
-    if (!this.isReadyToSubmit()) {
-      return;
-    }
-
+  submitShoppingList(): void {
     let elements: Array<ShoppingItem> = this.shoppingItems.map((i) => i.item);
     let date = new Date(this.shoppingDate)
 
     const shoppingList: ShoppingList = {
       shoppingDate: date,
-      store: this.storeSelection.value,
+      store: this.storeSelection?.value ?? null,
       shoppingItems: elements,
     };
 
     const url = `${baseUrl}/shoppingLists`;
+
+    this.$root.$emit("on-loading-change", true);
+    this.isListSaved = true;
     axios
       .post(url, shoppingList, {
         auth: defaultAuth,
       })
       .then(() => {
+        this.$root.$emit("on-loading-change", false);
         this.$router.push("/");
       })
-      .catch(() => {});
+      .catch(() => {
+        this.isListSaved = false;
+        this.$root.$emit("on-loading-change", false);
+      });
   }
 
   @Watch("storeSearch")
-  onStoreSearchPropertyChanged(newValue: string) {
+  onStoreSearchPropertyChanged(newValue: string): void {
     if (newValue === "" || newValue == null) {
       this.storeSuggestions = []
-      console.log("onStoreSearchPropertyChanged test")
       return;
     }
 
@@ -160,7 +159,7 @@ export default class BlankShoppingListComponent extends Vue {
       })
       .then((result) => {
         if (result.status == 200) {
-            this.storeSuggestions  = this.getStoreSuggestions(result.data.data);
+            this.storeSuggestions = this.getStoreSuggestions(result.data.data);
           } else {
             let newStoreChoice: Store = {
               id: null,
@@ -173,7 +172,6 @@ export default class BlankShoppingListComponent extends Vue {
   }
 
   mounted() {
-    console.log("created")
     this.shoppingDate = this.parseDate(new Date())
   }
 
