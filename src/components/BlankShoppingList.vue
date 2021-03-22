@@ -145,6 +145,8 @@ export default class BlankShoppingListComponent extends Vue {
   @Watch("storeSearch")
   onStoreSearchPropertyChanged(newValue: string) {
     if (newValue === "" || newValue == null) {
+      this.storeSuggestions = []
+      console.log("onStoreSearchPropertyChanged test")
       return;
     }
 
