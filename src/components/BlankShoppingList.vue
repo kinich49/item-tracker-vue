@@ -4,7 +4,7 @@
       <h1 id="shopping-label">Shopping Receipt</h1>
       <v-combobox
         class="shopping-store-input"
-        v-model="storeSelection"
+        v-model.lazy="storeSelection"
         :items="storeSuggestions"
         label="Store"
         :search-input.sync="storeSearch"
@@ -12,12 +12,12 @@
         hide-no-data
         clearable
       ></v-combobox>
-      <input id="shopping-date-input" v-model="shoppingDate" type="date" />
+      <input id="shopping-date-input" v-model="shoppingDate" type="date" > 
       <v-btn
         color="primary"
         tile
         id="submit-shopping-list"
-        v-on:click="submitShoppingList()"
+        @click="submitShoppingList()"
         >Save</v-btn
       >
       <div id="empty-message-container" v-if="shoppingItems.length <= 0">
@@ -74,7 +74,7 @@ interface ShoppingItemWrapper {
 })
 export default class BlankShoppingListComponent extends Vue {
 
-  shoppingDate: Date = new Date();
+  shoppingDate: string = "";
   shoppingItems: ShoppingItemWrapper[] = [];
   storeSearch: string = "";
   storeSuggestions: StoreSuggestion[] = [];
@@ -119,29 +119,31 @@ export default class BlankShoppingListComponent extends Vue {
     this.maxShoppingItemKey += 1;
   }
 
-    submitShoppingList() {
-      if (!this.isReadyToSubmit()) {
-        return;
-      }
-
-      let elements: Array<ShoppingItem> = this.shoppingItems.map((i) => i.item);
-
-      const shoppingList: ShoppingList = {
-        shoppingDate: this.shoppingDate,
-        store: this.storeSelection.value,
-        shoppingItems: elements,
-      };
-
-      const url = `${baseUrl}/shoppingLists`;
-      axios
-        .post(url, shoppingList, {
-          auth: defaultAuth,
-        })
-        .then(() => {
-          this.$router.push("/");
-        })
-        .catch(() => {});
+  submitShoppingList() {
+    if (!this.isReadyToSubmit()) {
+      return;
     }
+
+    let elements: Array<ShoppingItem> = this.shoppingItems.map((i) => i.item);
+    let date = new Date(this.shoppingDate)
+
+    const shoppingList: ShoppingList = {
+      shoppingDate: date,
+      store: this.storeSelection.value,
+      shoppingItems: elements,
+    };
+
+    const url = `${baseUrl}/shoppingLists`;
+    axios
+      .post(url, shoppingList, {
+        auth: defaultAuth,
+      })
+      .then(() => {
+        this.$router.push("/");
+      })
+      .catch(() => {});
+  }
+
   @Watch("storeSearch")
   onStoreSearchPropertyChanged(newValue: string) {
     if (newValue === "" || newValue == null) {
@@ -169,7 +171,19 @@ export default class BlankShoppingListComponent extends Vue {
       })
       .catch(() => {});
   }
+
+  mounted() {
+    console.log("created")
+    this.shoppingDate = this.parseDate(new Date())
+  }
+
+  private parseDate(date: Date): string{
+    return date.getFullYear().toString() + '-' + (date.getMonth() + 1).toString().padStart(2, "0") +
+    '-' + date.getDate().toString().padStart(2, "0");
+  }
+
 }
+
 </script>
 
 <style scoped>
