@@ -252,7 +252,11 @@ export default class ShoppingItemComponent extends Vue {
 
   @Watch("unitPrice")
   onUnitPriceChanged(newValue: number): void {
-    this.$emit("update:unitprice", newValue);
+    let unitPrice = newValue
+    if (unitPrice != undefined && unitPrice != null){
+      unitPrice = unitPrice * 100
+    }
+    this.$emit("update:unitprice", unitPrice);
   }
 
   @Watch("quantity")
