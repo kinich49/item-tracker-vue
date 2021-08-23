@@ -12,7 +12,7 @@
         hide-no-data
         clearable
       ></v-combobox>
-      <input id="shopping-date-input" v-model="shoppingDate" type="date" >
+      <input id="shopping-date-input" v-model="shoppingDate" type="date" />
       <v-btn
         color="primary"
         tile
@@ -39,6 +39,18 @@
           v-on:dismiss-item="removeItem(shoppingItem)"
         />
       </div>
+
+      <div>
+        <v-snackbar v-model="isShowingSnackbar">
+          Shopping List saved!
+          <v-btn
+            color="pink"
+            text
+            @click="isShowingSnackbar = false">
+            Close
+          </v-btn>
+        </v-snackbar>
+      </div>
     </div>
     <div id="fab-container">
       <v-btn
@@ -54,27 +66,25 @@
 </template>
 
 <script lang="ts">
-
 import axios from "axios";
 import defaultAuth, { baseUrl } from "../constants";
 import { Component, Vue, Watch } from "vue-property-decorator";
-import { StoreSuggestion } from "@/models/RequestUnionResponse"
-import ShoppingItemComponent from "./ShoppingItem.vue"
-import { ShoppingItem, Store, ShoppingList } from "@/models/Requests"
-import JsonApi from "@/models/JsonApi"
+import { StoreSuggestion } from "@/models/RequestUnionResponse";
+import ShoppingItemComponent from "./ShoppingItem.vue";
+import { ShoppingItem, Store, ShoppingList } from "@/models/Requests";
+import JsonApi from "@/models/JsonApi";
 
 interface ShoppingItemWrapper {
-  shoppingItemKey: number,
-  item: ShoppingItem
+  shoppingItemKey: number;
+  item: ShoppingItem;
 }
 
 @Component({
   components: {
-    ShoppingItemComponent
-  }
+    ShoppingItemComponent,
+  },
 })
 export default class BlankShoppingListComponent extends Vue {
-
   shoppingDate: string = "";
   shoppingItems: ShoppingItemWrapper[] = [];
   storeSearch: string = "";
@@ -82,25 +92,25 @@ export default class BlankShoppingListComponent extends Vue {
   storeSelection: StoreSuggestion = null;
   maxShoppingItemKey: number = 0;
   isSaveInProgress: boolean = false;
+  isShowingSnackbar: boolean = false;
 
   private getStoreSuggestions(stores: Store[]): StoreSuggestion[] {
-    return stores.map(store => {
+    return stores.map((store) => {
       return {
         text: store.name ?? "",
-        value: store
-      }
-    })
+        value: store,
+      };
+    });
   }
 
   removeItem(shoppingItem: ShoppingItemWrapper): void {
-      const index = this.shoppingItems.indexOf(shoppingItem);
-      if (index > -1) {
-        this.shoppingItems.splice(index, 1);
-      }
+    const index = this.shoppingItems.indexOf(shoppingItem);
+    if (index > -1) {
+      this.shoppingItems.splice(index, 1);
+    }
   }
 
   reloadData() {
-    console.log("reload data!");
     this.shoppingDate = "";
     this.shoppingItems = [];
     this.storeSearch = "";
@@ -129,7 +139,7 @@ export default class BlankShoppingListComponent extends Vue {
 
   submitShoppingList(): void {
     let elements: Array<ShoppingItem> = this.shoppingItems.map((i) => i.item);
-    let date = new Date(this.shoppingDate)
+    let date = new Date(this.shoppingDate);
 
     const shoppingList: ShoppingList = {
       shoppingDate: date,
@@ -148,6 +158,7 @@ export default class BlankShoppingListComponent extends Vue {
       .then(() => {
         this.$root.$emit("on-loading-change", false);
         this.reloadData();
+        this.isShowingSnackbar = true;
       })
       .catch(() => {
         this.isSaveInProgress = false;
@@ -158,7 +169,7 @@ export default class BlankShoppingListComponent extends Vue {
   @Watch("storeSearch")
   onStoreSearchPropertyChanged(newValue: string): void {
     if (newValue === "" || newValue == null) {
-      this.storeSuggestions = []
+      this.storeSuggestions = [];
       return;
     }
 
@@ -170,29 +181,32 @@ export default class BlankShoppingListComponent extends Vue {
       })
       .then((result) => {
         if (result.status == 200) {
-            this.storeSuggestions = this.getStoreSuggestions(result.data.data);
-          } else {
-            let newStoreChoice: Store = {
-              id: null,
-              name: newValue
-            };
-            this.storeSuggestions = this.getStoreSuggestions([newStoreChoice])
-          }
+          this.storeSuggestions = this.getStoreSuggestions(result.data.data);
+        } else {
+          let newStoreChoice: Store = {
+            id: null,
+            name: newValue,
+          };
+          this.storeSuggestions = this.getStoreSuggestions([newStoreChoice]);
+        }
       })
       .catch(() => {});
   }
 
   mounted() {
-    this.shoppingDate = this.parseDate(new Date())
+    this.shoppingDate = this.parseDate(new Date());
   }
 
-  private parseDate(date: Date): string{
-    return date.getFullYear().toString() + '-' + (date.getMonth() + 1).toString().padStart(2, "0") +
-    '-' + date.getDate().toString().padStart(2, "0");
+  private parseDate(date: Date): string {
+    return (
+      date.getFullYear().toString() +
+      "-" +
+      (date.getMonth() + 1).toString().padStart(2, "0") +
+      "-" +
+      date.getDate().toString().padStart(2, "0")
+    );
   }
-
 }
-
 </script>
 
 <style scoped>
