@@ -18,7 +18,7 @@
         tile
         id="submit-shopping-list"
         @click="submitShoppingList()"
-        :disabled="isListSaved"
+        :disabled="isSaveInProgress"
         >Save</v-btn
       >
       <div id="empty-message-container" v-if="shoppingItems.length <= 0">
@@ -81,7 +81,7 @@ export default class BlankShoppingListComponent extends Vue {
   storeSuggestions: StoreSuggestion[] = [];
   storeSelection: StoreSuggestion = null;
   maxShoppingItemKey: number = 0;
-  isListSaved: boolean = false;
+  isSaveInProgress: boolean = false;
 
   private getStoreSuggestions(stores: Store[]): StoreSuggestion[] {
     return stores.map(store => {
@@ -97,6 +97,17 @@ export default class BlankShoppingListComponent extends Vue {
       if (index > -1) {
         this.shoppingItems.splice(index, 1);
       }
+  }
+
+  reloadData() {
+    console.log("reload data!");
+    this.shoppingDate = "";
+    this.shoppingItems = [];
+    this.storeSearch = "";
+    this.storeSuggestions = [];
+    this.storeSelection = null;
+    this.maxShoppingItemKey = 0;
+    this.isSaveInProgress = false;
   }
 
   addBlankShoppingItem(): void {
@@ -129,17 +140,17 @@ export default class BlankShoppingListComponent extends Vue {
     const url = `${baseUrl}/shoppingLists`;
 
     this.$root.$emit("on-loading-change", true);
-    this.isListSaved = true;
+    this.isSaveInProgress = true;
     axios
       .post(url, shoppingList, {
         auth: defaultAuth,
       })
       .then(() => {
         this.$root.$emit("on-loading-change", false);
-        this.$router.push("/");
+        this.reloadData();
       })
       .catch(() => {
-        this.isListSaved = false;
+        this.isSaveInProgress = false;
         this.$root.$emit("on-loading-change", false);
       });
   }
