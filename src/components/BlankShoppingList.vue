@@ -193,10 +193,6 @@ export default class BlankShoppingListComponent extends Vue {
       .catch(() => {});
   }
 
-  mounted() {
-    this.shoppingDate = this.parseDate(new Date());
-  }
-
   private parseDate(date: Date): string {
     return (
       date.getFullYear().toString() +
