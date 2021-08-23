@@ -24,7 +24,7 @@ You also need to add three local files
 .env.production
 ```
 
-And set these variables accordingly to what you defined in your back-end environment. These is an ongoing project in development, so that's why we hardcode some credentials (But we don't want to upload them to git remote)
+And set these variables accordingly to what you defined in your back-end environment. This is an ongoing project in development, so that's why we hardcode some credentials (But we don't want to upload them to remote repository)
 ```
 VUE_APP_BASE_URL
 VUE_APP_DEFAULT_USERNAME
