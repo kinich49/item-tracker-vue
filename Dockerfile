@@ -5,5 +5,7 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npm run build
-EXPOSE 4200
-CMD ["http-server", "dist", "--port", "4200"]
+ARG port
+EXPOSE ${port}
+ENTRYPOINT ["http-server", "dist", "--port"]
+CMD ["4200"]
