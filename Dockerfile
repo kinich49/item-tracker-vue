@@ -8,4 +8,4 @@ RUN npm run build
 ARG port
 EXPOSE ${port}
 ENTRYPOINT ["http-server", "dist", "--port"]
-CMD ${port}
+CMD $port
