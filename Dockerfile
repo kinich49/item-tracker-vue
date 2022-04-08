@@ -4,8 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npm run build
 ARG port
 EXPOSE ${port}
-ENTRYPOINT ["http-server", "dist", "--port"]
-CMD $port
+ENV env_port ${port}
+RUN npm run build -- --port=${port}
+ENTRYPOINT http-server dist --port ${env_port}
